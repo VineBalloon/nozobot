@@ -25,6 +25,39 @@ var (
 // MHandler type for message-invoked commands
 type MHandler func(s *discordgo.Session, m *discordgo.MessageCreate) error
 
+// Handler struct
+type Handler struct {
+	mhandler MHandler
+	desc     string
+	roles    []string
+	channels []string
+}
+
+// Setter for description
+func (h *Handler) Desc(d string) {
+	h.desc = d
+}
+
+// Setter for roles
+func (h *Handler) Roles(r []string) {
+	h.roles = r
+}
+
+// Setter for channels
+func (h *Handler) Channels(c []string) {
+	h.channels = c
+}
+
+// Simple constructor for Handler
+func NewHandler(m MHandler) *Handler {
+	return &Handler{
+		mhandler: m,
+		desc:     "",
+		roles:    nil,
+		channels: nil,
+	}
+}
+
 // Helper function to get guild and vc id from state and message
 // Pass into constructor as `NewVoiceRoom(VoiceInfoFromMessage(session, user))
 func VoiceInfoFromMessage(s *discordgo.Session, m *discordgo.Message) (string, string) {
@@ -75,22 +108,16 @@ func (v *VoiceRoom) Connect(s *discordgo.Session) error {
 // Close the voice connection
 func (v *VoiceRoom) Close() {
 	v.Connection.Disconnect()
+	v.Connection = nil
 }
 
 // Router struct to hold our string->router mappings
 type Router struct {
-	routes map[string]MHandler
-}
-
-// Constructor for Router struct
-func NewRouter() *Router {
-	return &Router{
-		routes: make(map[string]MHandler),
-	}
+	routes map[string]Handler
 }
 
 // Router method to add a string->handler mapping
-func (r *Router) AddMHandler(cmd string, handler MHandler) {
+func (r *Router) AddHandler(cmd string, handler Handler) {
 	r.routes[cmd] = handler
 }
 
@@ -124,26 +151,16 @@ func (r *Router) Run(d *discordgo.Session) {
 			return
 		}
 
-		// TODO make help default method that iterates through handlers
+		// TODO make !help default handler that iterates through handlers
 		// and make handlers a struct actually that have a description
 
-		err := handler(s, m)
+		// Call mhandler
+		err := handler.mhandler(s, m)
 
 		if err != nil {
-			s.ChannelMessageSend(m.ChannelID, "Something went wrong!")
+			s.ChannelMessageSend(m.ChannelID, err.Error())
 			return
 		}
-
-		/*Fallback if you don't like routing
-		//Simple ping message
-		if command == "ping" {
-			sent, err := s.ChannelMessageSend(m.ChannelID, "Pong!")
-			if err != nil {
-				fmt.Println("Ara Ara:", err)
-			}
-			fmt.Println("Send message:", sent)
-		}
-		*/
 	})
 
 	// Don't close the connection, wait for a kill signal
@@ -155,8 +172,31 @@ func (r *Router) Run(d *discordgo.Session) {
 	d.Close()
 }
 
+// Constructor for Router struct
+func NewRouter() *Router {
+	r := make(map[string]Handler)
+	// Help is a default handler
+	router := &Router{
+		routes: r,
+	}
+	router.AddHandler("help", *NewHandler(HandleHelp))
+	return router
+}
+
+// Default help command
+func HandleHelp(s *discordgo.Session, m *discordgo.MessageCreate) error {
+	// TODO Iterate through the router's handlers
+	_, err := s.ChannelMessageSend(m.ChannelID, "Still under construction!")
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 /************************/
 /********COMMANDS********/
+
+// TODO Make each handler a struct that implements the handler interface
 // ping
 func HandlePing(s *discordgo.Session, m *discordgo.MessageCreate) error {
 	_, err := s.ChannelMessageSend(m.ChannelID, "Pong!")
@@ -228,7 +268,7 @@ func main() {
 
 	// Route messages based on their command
 	r := NewRouter()
-	r.AddMHandler("ping", HandlePing)
-	r.AddMHandler("washi", HandleWashi)
+	r.AddHandler("ping", *NewHandler(HandlePing))
+	r.AddHandler("washi", *NewHandler(HandleWashi))
 	r.Run(dg)
 }
