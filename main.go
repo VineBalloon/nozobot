@@ -22,40 +22,34 @@ var (
 	Prefix = "!"
 )
 
+// Handler interface for commands to implement
+type Handler interface {
+	Desc() string
+	Roles() []string
+	Channels() []string
+	Handle(*discordgo.Session, *discordgo.MessageCreate) error
+}
+
 // MHandler type for message-invoked commands
 type MHandler func(s *discordgo.Session, m *discordgo.MessageCreate) error
 
-// Handler struct
-type Handler struct {
-	mhandler MHandler
-	desc     string
-	roles    []string
-	channels []string
-}
-
-// Setter for description
-func (h *Handler) Desc(d string) {
-	h.desc = d
-}
-
-// Setter for roles
-func (h *Handler) Roles(r []string) {
-	h.roles = r
-}
-
-// Setter for channels
-func (h *Handler) Channels(c []string) {
-	h.channels = c
-}
-
-// Simple constructor for Handler
-func NewHandler(m MHandler) *Handler {
-	return &Handler{
-		mhandler: m,
-		desc:     "",
-		roles:    nil,
-		channels: nil,
+// Voice Room Constructor
+func NewVoiceRoom(guild, channel string) (*VoiceRoom, error) {
+	if channel == "" {
+		return nil, errors.New("nozobot: user not in voice channel")
 	}
+
+	return &VoiceRoom{
+		guild:      guild,
+		id:         channel,
+		Connection: nil,
+	}, nil
+}
+
+type VoiceRoom struct {
+	guild      string
+	id         string
+	Connection *discordgo.VoiceConnection
 }
 
 // Helper function to get guild and vc id from state and message
@@ -78,26 +72,6 @@ func VoiceInfoFromMessage(s *discordgo.Session, m *discordgo.Message) (string, s
 	return guildId, channel
 }
 
-type VoiceRoom struct {
-	guild      string
-	id         string
-	Connection *discordgo.VoiceConnection
-}
-
-// Construct a new voice room
-func NewVoiceRoom(guild, channel string) (*VoiceRoom, error) {
-	if channel == "" {
-		return nil, errors.New("nozobot: user not in voice channel")
-	}
-
-	return &VoiceRoom{
-		guild:      guild,
-		id:         channel,
-		Connection: nil,
-	}, nil
-}
-
-// Connect to the voice channel
 func (v *VoiceRoom) Connect(s *discordgo.Session) error {
 	// Attempt to generate a voice connection
 	vc, err := s.ChannelVoiceJoin(v.guild, v.id, false, false)
@@ -105,7 +79,6 @@ func (v *VoiceRoom) Connect(s *discordgo.Session) error {
 	return err
 }
 
-// Close the voice connection
 func (v *VoiceRoom) Close() {
 	v.Connection.Disconnect()
 	v.Connection = nil
@@ -116,9 +89,16 @@ type Router struct {
 	routes map[string]Handler
 }
 
-// Router method to add a string->handler mapping
 func (r *Router) AddHandler(cmd string, handler Handler) {
-	r.routes[cmd] = handler
+	r.routes[strings.ToLower(cmd)] = handler
+}
+
+func (r *Router) Route(cmd string) (Handler, bool) {
+	routes := r.routes[cmd]
+	if routes == nil {
+		return nil, false
+	}
+	return routes, true
 }
 
 // Method to run the router
@@ -144,18 +124,16 @@ func (r *Router) Run(d *discordgo.Session) {
 		args := strings.SplitN(command, " ", 2)
 
 		// Route message to the handler
-		handler, found := r.routes[args[0]]
+		handler, found := r.Route(args[0])
 		if !found {
-			err := "Unknown command, type " + Prefix + "help"
+			err := "Unknown command, use " + Prefix + "help"
 			s.ChannelMessageSend(m.ChannelID, err)
 			return
 		}
 
-		// TODO make !help default handler that iterates through handlers
-		// and make handlers a struct actually that have a description
-
-		// Call mhandler
-		err := handler.mhandler(s, m)
+		//handler := *handlerp
+		// Call handler method
+		err := handler.Handle(s, m)
 
 		if err != nil {
 			s.ChannelMessageSend(m.ChannelID, err.Error())
@@ -175,30 +153,99 @@ func (r *Router) Run(d *discordgo.Session) {
 // Constructor for Router struct
 func NewRouter() *Router {
 	r := make(map[string]Handler)
-	// Help is a default handler
 	router := &Router{
 		routes: r,
 	}
-	router.AddHandler("help", *NewHandler(HandleHelp))
 	return router
 }
 
 // Default help command
-func HandleHelp(s *discordgo.Session, m *discordgo.MessageCreate) error {
-	// TODO Iterate through the router's handlers
-	_, err := s.ChannelMessageSend(m.ChannelID, "Still under construction!")
+func NewHelp(n string) *Help {
+	return &Help{
+		"help",
+		nil,
+	}
+}
+
+type Help struct {
+	name         string
+	descriptions map[string]string
+}
+
+func (h *Help) AddDesc(r *map[string]Handler) {
+	h.descriptions = make(map[string]string)
+	for cmd, handler := range *r {
+		h.descriptions[cmd] = handler.Desc()
+	}
+	fmt.Println(h.descriptions)
+}
+
+// TODO Iterate through the router's handlers and refactor
+func (h *Help) Handle(s *discordgo.Session, m *discordgo.MessageCreate) error {
+	out := "Commands:\n"
+	for name, desc := range h.descriptions {
+		out += name + ": " + desc + "\n"
+	}
+	_, err := s.ChannelMessageSend(m.ChannelID, out)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
+func (h *Help) Desc() string {
+	return "Nozomi helps you write out this command!"
+}
+
+func (h *Help) Roles() []string {
+	return nil
+}
+
+func (h *Help) Channels() []string {
+	return nil
+}
+
 /************************/
 /********COMMANDS********/
 
-// TODO Make each handler a struct that implements the handler interface
-// ping
-func HandlePing(s *discordgo.Session, m *discordgo.MessageCreate) error {
+func NewPing(n string) *Ping {
+	return &Ping{
+		"Ping",
+	}
+}
+
+func NewWashi(n string) *Washi {
+	return &Washi{
+		"Washi",
+	}
+}
+
+func NewTarot(n string) *Tarot {
+	return &Tarot{
+		"Tarot",
+	}
+}
+
+/*----------------------*/
+// TODO put each command into their own file
+
+type Ping struct {
+	name string
+}
+
+func (p *Ping) Desc() string {
+	return "Ping pong with Nozomi :ping_pong:"
+}
+
+func (p *Ping) Roles() []string {
+	return nil
+}
+
+func (p *Ping) Channels() []string {
+	return nil
+}
+
+func (p *Ping) Handle(s *discordgo.Session, m *discordgo.MessageCreate) error {
 	_, err := s.ChannelMessageSend(m.ChannelID, "Pong!")
 	if err != nil {
 		return err
@@ -206,27 +253,41 @@ func HandlePing(s *discordgo.Session, m *discordgo.MessageCreate) error {
 	return nil
 }
 
-// TODO make nozomi join VC and play the audio
-// washi
-func HandleWashi(s *discordgo.Session, m *discordgo.MessageCreate) error {
+type Washi struct {
+	name string
+}
+
+func (w *Washi) Desc() string {
+	return "Nozomi's washi washi will follow you into Voice as well!"
+}
+
+func (w *Washi) Roles() []string {
+	return nil
+}
+
+func (w *Washi) Channels() []string {
+	return nil
+}
+
+func (w *Washi) Handle(s *discordgo.Session, m *discordgo.MessageCreate) error {
 	_, err := s.ChannelMessageSend(m.ChannelID, "Washi Washi!")
 	if err != nil {
 		return err
 	}
 
-	// Create a voice room
+	// Attempt to join a voice room
 	vr, err := NewVoiceRoom(VoiceInfoFromMessage(s, m.Message))
 	if err != nil {
 		return err
 	}
 
-	// Connect to the voice room
 	err = vr.Connect(s)
 	if err != nil {
 		return err
 	}
 
 	// Sleep for 5 seconds
+	// TODO make nozomi play the audio
 	time.Sleep(time.Second * 5)
 
 	// Close the voice connection
@@ -234,8 +295,23 @@ func HandleWashi(s *discordgo.Session, m *discordgo.MessageCreate) error {
 	return nil
 }
 
-// tarot
-func HandleTarot(s *discordgo.Session, m *discordgo.MessageCreate) error {
+type Tarot struct {
+	name string
+}
+
+func (t *Tarot) Desc() string {
+	return "Nozomi decides your fate!"
+}
+
+func (t *Tarot) Roles() []string {
+	return nil
+}
+
+func (t *Tarot) Channels() []string {
+	return nil
+}
+
+func (t *Tarot) HandleTarot(s *discordgo.Session, m *discordgo.MessageCreate) error {
 	return nil
 }
 
@@ -266,9 +342,19 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Genearte command structs
+	help := NewHelp("help")
+	ping := NewPing("ping")
+	washi := NewWashi("washi")
+
 	// Route messages based on their command
 	r := NewRouter()
-	r.AddHandler("ping", *NewHandler(HandlePing))
-	r.AddHandler("washi", *NewHandler(HandleWashi))
+	r.AddHandler(help.name, help)
+	r.AddHandler(ping.name, ping)
+	r.AddHandler(washi.name, washi)
+
+	// Add help messages to help
+	help.AddDesc(&r.routes)
+	fmt.Println(help.descriptions)
 	r.Run(dg)
 }
