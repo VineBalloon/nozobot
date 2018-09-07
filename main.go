@@ -4,96 +4,34 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"os"
 	"os/signal"
 	"strings"
 	"syscall"
-	"time"
 
+	"github.com/VineBalloon/nozobot/handlers"
 	"github.com/bwmarrin/discordgo"
 )
 
 // Global var for our token
 var (
-	Token  string
-	Prefix = "!"
+	token  string
+	prefix = "!"
+	help   = []string{}
 )
-
-// Handler interface for commands to implement
-type Handler interface {
-	Desc() string
-	Roles() []string
-	Channels() []string
-	Handle(*discordgo.Session, *discordgo.MessageCreate) error
-}
-
-// MHandler type for message-invoked commands
-type MHandler func(s *discordgo.Session, m *discordgo.MessageCreate) error
-
-// Voice Room Constructor
-func NewVoiceRoom(guild, channel string) (*VoiceRoom, error) {
-	if channel == "" {
-		return nil, errors.New("nozobot: user not in voice channel")
-	}
-
-	return &VoiceRoom{
-		guild:      guild,
-		id:         channel,
-		Connection: nil,
-	}, nil
-}
-
-type VoiceRoom struct {
-	guild      string
-	id         string
-	Connection *discordgo.VoiceConnection
-}
-
-// Helper function to get guild and vc id from state and message
-// Pass into constructor as `NewVoiceRoom(VoiceInfoFromMessage(session, user))
-func VoiceInfoFromMessage(s *discordgo.Session, m *discordgo.Message) (string, string) {
-	// Get the guild and guild ID
-	mchannel, _ := s.Channel(m.ChannelID)
-	guildId := mchannel.GuildID
-	guild, _ := s.Guild(guildId)
-
-	// Get channel id
-	u := m.Author
-	channel := ""
-	for _, vs := range guild.VoiceStates {
-		if vs.UserID == u.ID {
-			channel = vs.ChannelID
-		}
-	}
-
-	return guildId, channel
-}
-
-func (v *VoiceRoom) Connect(s *discordgo.Session) error {
-	// Attempt to generate a voice connection
-	vc, err := s.ChannelVoiceJoin(v.guild, v.id, false, false)
-	v.Connection = vc
-	return err
-}
-
-func (v *VoiceRoom) Close() {
-	v.Connection.Disconnect()
-	v.Connection = nil
-}
 
 // Router struct to hold our string->router mappings
 type Router struct {
-	routes map[string]Handler
+	routes map[string]handlers.Handler
 }
 
-func (r *Router) AddHandler(cmd string, handler Handler) {
+func (r *Router) AddHandler(cmd string, handler handlers.Handler) {
 	r.routes[strings.ToLower(cmd)] = handler
 }
 
-func (r *Router) Route(cmd string) (Handler, bool) {
+func (r *Router) Route(cmd string) (handlers.Handler, bool) {
 	routes := r.routes[cmd]
 	if routes == nil {
 		return nil, false
@@ -111,12 +49,12 @@ func (r *Router) Run(d *discordgo.Session) {
 		}
 
 		message := strings.TrimSpace(m.Content)
-		if !strings.HasPrefix(message, Prefix) {
+		if !strings.HasPrefix(message, prefix) {
 			return
 		}
 
 		// Parse message
-		command := strings.ToLower(strings.TrimLeft(message, Prefix))
+		command := strings.ToLower(strings.TrimLeft(message, prefix))
 
 		//fmt.Printf("Received message {%s}\n", message)
 
@@ -126,12 +64,11 @@ func (r *Router) Run(d *discordgo.Session) {
 		// Route message to the handler
 		handler, found := r.Route(args[0])
 		if !found {
-			err := "Unknown command, use " + Prefix + "help"
+			err := "Unknown command, use " + prefix + "help"
 			s.ChannelMessageSend(m.ChannelID, err)
 			return
 		}
 
-		//handler := *handlerp
 		// Call handler method
 		err := handler.Handle(s, m)
 
@@ -152,189 +89,30 @@ func (r *Router) Run(d *discordgo.Session) {
 
 // Constructor for Router struct
 func NewRouter() *Router {
-	r := make(map[string]Handler)
+	r := make(map[string]handlers.Handler)
 	router := &Router{
 		routes: r,
 	}
 	return router
 }
 
-// Default help command
-func NewHelp(n string) *Help {
-	return &Help{
-		"help",
-		nil,
-	}
-}
-
-type Help struct {
-	name         string
-	descriptions map[string]string
-}
-
-func (h *Help) AddDesc(r *map[string]Handler) {
-	h.descriptions = make(map[string]string)
-	for cmd, handler := range *r {
-		h.descriptions[cmd] = handler.Desc()
-	}
-	fmt.Println(h.descriptions)
-}
-
-// TODO Iterate through the router's handlers and refactor
-func (h *Help) Handle(s *discordgo.Session, m *discordgo.MessageCreate) error {
-	out := "Commands:\n"
-	for name, desc := range h.descriptions {
-		out += name + ": " + desc + "\n"
-	}
-	_, err := s.ChannelMessageSend(m.ChannelID, out)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (h *Help) Desc() string {
-	return "Nozomi helps you write out this command!"
-}
-
-func (h *Help) Roles() []string {
-	return nil
-}
-
-func (h *Help) Channels() []string {
-	return nil
-}
-
-/************************/
-/********COMMANDS********/
-
-func NewPing(n string) *Ping {
-	return &Ping{
-		"Ping",
-	}
-}
-
-func NewWashi(n string) *Washi {
-	return &Washi{
-		"Washi",
-	}
-}
-
-func NewTarot(n string) *Tarot {
-	return &Tarot{
-		"Tarot",
-	}
-}
-
-/*----------------------*/
-// TODO put each command into their own file
-
-type Ping struct {
-	name string
-}
-
-func (p *Ping) Desc() string {
-	return "Ping pong with Nozomi :ping_pong:"
-}
-
-func (p *Ping) Roles() []string {
-	return nil
-}
-
-func (p *Ping) Channels() []string {
-	return nil
-}
-
-func (p *Ping) Handle(s *discordgo.Session, m *discordgo.MessageCreate) error {
-	_, err := s.ChannelMessageSend(m.ChannelID, "Pong!")
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-type Washi struct {
-	name string
-}
-
-func (w *Washi) Desc() string {
-	return "Nozomi's washi washi will follow you into Voice as well!"
-}
-
-func (w *Washi) Roles() []string {
-	return nil
-}
-
-func (w *Washi) Channels() []string {
-	return nil
-}
-
-func (w *Washi) Handle(s *discordgo.Session, m *discordgo.MessageCreate) error {
-	_, err := s.ChannelMessageSend(m.ChannelID, "Washi Washi!")
-	if err != nil {
-		return err
-	}
-
-	// Attempt to join a voice room
-	vr, err := NewVoiceRoom(VoiceInfoFromMessage(s, m.Message))
-	if err != nil {
-		return err
-	}
-
-	err = vr.Connect(s)
-	if err != nil {
-		return err
-	}
-
-	// Sleep for 5 seconds
-	// TODO make nozomi play the audio
-	time.Sleep(time.Second * 5)
-
-	// Close the voice connection
-	vr.Close()
-	return nil
-}
-
-type Tarot struct {
-	name string
-}
-
-func (t *Tarot) Desc() string {
-	return "Nozomi decides your fate!"
-}
-
-func (t *Tarot) Roles() []string {
-	return nil
-}
-
-func (t *Tarot) Channels() []string {
-	return nil
-}
-
-func (t *Tarot) HandleTarot(s *discordgo.Session, m *discordgo.MessageCreate) error {
-	return nil
-}
-
-/********COMMANDS********/
-/************************/
-
 func init() {
 	// Get environment variable for discord token
-	token, err := os.LookupEnv("TOKEN")
+	t, err := os.LookupEnv("TOKEN")
 	if !err {
 		log.Println("Please set env TOKEN=[AUTH_TOKEN]!")
 		os.Exit(1)
 	}
 
 	// Set the token
-	Token = token
+	token = t
 }
 
 func main() {
 	// Open a websocket connection to Discord
-	dg, err := discordgo.New("Bot " + Token)
+	dg, err := discordgo.New("Bot " + token)
 	if err != nil {
-		fmt.Println("Ara Ara:", err)
+		log.Println("Ara Ara:", err)
 	}
 	err = dg.Open()
 	if err != nil {
@@ -343,18 +121,17 @@ func main() {
 	}
 
 	// Genearte command structs
-	help := NewHelp("help")
-	ping := NewPing("ping")
-	washi := NewWashi("washi")
+	help := handlers.NewHelp("help", prefix)
+	ping := handlers.NewPing("ping")
+	washi := handlers.NewWashi("washi")
 
 	// Route messages based on their command
 	r := NewRouter()
-	r.AddHandler(help.name, help)
-	r.AddHandler(ping.name, ping)
-	r.AddHandler(washi.name, washi)
+	r.AddHandler(help.Name, help)
+	r.AddHandler(ping.Name, ping)
+	r.AddHandler(washi.Name, washi)
 
 	// Add help messages to help
 	help.AddDesc(&r.routes)
-	fmt.Println(help.descriptions)
 	r.Run(dg)
 }
