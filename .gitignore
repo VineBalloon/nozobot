@@ -1,0 +1,13 @@
+# From https://gist.github.com/chichunchen/970a7e97c74a253a4503
+# Ignore everything
+*
+
+# Uningore all with extensions
+!*.*
+
+# Unignore dirs
+!*/
+
+# Ignore audio dir
+audio/
+*/audio/*
