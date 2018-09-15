@@ -52,10 +52,10 @@ func (v *VoiceRoom) Close() {
 	v.Connection = nil
 }
 
-// Voice Room Constructor
+// Voice Room Constructor, always call with VoiceInfoFromMessage
 func NewVoiceRoom(guild, channel string) (*VoiceRoom, error) {
 	if channel == "" {
-		return nil, errors.New("nozobot: user not in voice channel")
+		return nil, errors.New("user not in voice channel")
 	}
 
 	return &VoiceRoom{

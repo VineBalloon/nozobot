@@ -22,10 +22,10 @@ func (h *Help) AddDesc(r *map[string]Handler) {
 }
 
 func (h *Help) Handle(s *discordgo.Session, m *discordgo.MessageCreate) error {
-	out := "Commands:\n"
+	out := helpers.Bold("Commands:\n")
 	sorted := []string{}
 	for name, desc := range h.descriptions {
-		sorted = append(sorted, helpers.Bold(h.prefix+name)+": "+desc)
+		sorted = append(sorted, helpers.Code(h.prefix+name)+": "+desc)
 	}
 	sort.Strings(sorted)
 	out += strings.Join(sorted, "\n")

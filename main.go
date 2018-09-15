@@ -4,6 +4,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -12,6 +13,7 @@ import (
 	"syscall"
 
 	"github.com/VineBalloon/nozobot/handlers"
+	"github.com/VineBalloon/nozobot/helpers"
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -64,8 +66,9 @@ func (r *Router) Run(d *discordgo.Session) {
 		// Route message to the handler
 		handler, found := r.Route(args[0])
 		if !found {
-			err := "Unknown command, use " + prefix + "help"
-			s.ChannelMessageSend(m.ChannelID, err)
+			err := errors.New("Unknown command, use " + helpers.Code(prefix+"help"))
+			s.ChannelMessageSend(m.ChannelID,
+				helpers.Italics("Error: "+err.Error()))
 			return
 		}
 
@@ -73,7 +76,8 @@ func (r *Router) Run(d *discordgo.Session) {
 		err := handler.Handle(s, m)
 
 		if err != nil {
-			s.ChannelMessageSend(m.ChannelID, err.Error())
+			s.ChannelMessageSend(m.ChannelID,
+				helpers.Italics("Error: "+err.Error()))
 			return
 		}
 	})
@@ -124,12 +128,14 @@ func main() {
 	help := handlers.NewHelp("help", prefix)
 	ping := handlers.NewPing("ping")
 	washi := handlers.NewWashi("washi")
+	junai := handlers.NewJunai("junai")
 
 	// Route messages based on their command
 	r := NewRouter()
 	r.AddHandler(help.Name, help)
 	r.AddHandler(ping.Name, ping)
 	r.AddHandler(washi.Name, washi)
+	r.AddHandler(junai.Name, junai)
 
 	// Add help messages to help
 	help.AddDesc(&r.routes)
