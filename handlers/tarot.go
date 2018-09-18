@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	//"github.com/VineBalloon/nozobot/helpers"
+	"github.com/VineBalloon/nozobot/client"
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -21,7 +21,10 @@ func (t *Tarot) Channels() []string {
 	return nil
 }
 
-func (t *Tarot) HandleTarot(s *discordgo.Session, m *discordgo.MessageCreate) error {
+func (t *Tarot) HandleTarot(c *client.ClientState) error {
+	s := c.Session
+	m := c.Message
+
 	return nil
 }
 

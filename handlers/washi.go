@@ -3,8 +3,9 @@ package handlers
 import (
 	"time"
 
-	//"github.com/VineBalloon/nozobot/helpers"
+	"github.com/VineBalloon/nozobot/client"
 	//"github.com/VineBalloon/nozobot/sounds"
+	"github.com/VineBalloon/nozobot/voice"
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -24,26 +25,37 @@ func (w *Washi) Channels() []string {
 	return nil
 }
 
-func (w *Washi) Handle(s *discordgo.Session, m *discordgo.MessageCreate) error {
+func (w *Washi) Handle(c *client.ClientState) error {
+	s := c.Session
+	m := c.Message
+
 	_, err := s.ChannelMessageSend(m.ChannelID, "Washi Washi!")
 	if err != nil {
 		return err
 	}
 
-	// Attempt to join a voice room
-	vr, err := NewVoiceRoom(VoiceInfoFromMessage(s, m.Message))
+	// Create a voice room
+	vr, err := voice.NewVoiceRoom(s, m.Message)
 	if err != nil {
 		return err
 	}
 
+	// Create a new sound map
+	sm := map[string]*sounds.Sound{
+		"1": sounds.NewSound("1", 10),
+	}
+
+	// Create a new sound collection with our sound map
+	sounds.NewSoundCollection(w.Name, sm)
+
+	// Connect to the voice room
 	err = vr.Connect(s)
 	if err != nil {
 		return err
 	}
 
-	// Sleep for 5 seconds
-	// TODO make nozomi play the audio
-	time.Sleep(time.Second * 5)
+	// Play a random sound
+	vr.PlayRandom()
 
 	// Close the voice connection
 	vr.Close()

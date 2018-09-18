@@ -4,6 +4,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/VineBalloon/nozobot/client"
 	"github.com/VineBalloon/nozobot/helpers"
 	"github.com/bwmarrin/discordgo"
 )
@@ -21,7 +22,10 @@ func (h *Help) AddDesc(r *map[string]Handler) {
 	}
 }
 
-func (h *Help) Handle(s *discordgo.Session, m *discordgo.MessageCreate) error {
+func (h *Help) Handle(c *client.ClientState) error {
+	s := c.Session
+	m := c.Message
+
 	out := helpers.Bold("Commands:\n")
 	sorted := []string{}
 	for name, desc := range h.descriptions {

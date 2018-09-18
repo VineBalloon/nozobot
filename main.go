@@ -12,6 +12,7 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/VineBalloon/nozobot/client"
 	"github.com/VineBalloon/nozobot/handlers"
 	"github.com/VineBalloon/nozobot/helpers"
 	"github.com/bwmarrin/discordgo"
@@ -44,6 +45,7 @@ func (r *Router) Route(cmd string) (handlers.Handler, bool) {
 // Method to run the router
 func (r *Router) Run(d *discordgo.Session) {
 	// Add anonymous function to route messages to handlers
+	// this gets called when a message is read by the bot
 	d.AddHandler(func(s *discordgo.Session, m *discordgo.MessageCreate) {
 		// Don't talk to yourself
 		if m.Author.ID == s.State.User.ID {
@@ -63,7 +65,7 @@ func (r *Router) Run(d *discordgo.Session) {
 		// Split the command into 2 substrings
 		args := strings.SplitN(command, " ", 2)
 
-		// Route message to the handler
+		// Find handler using router
 		handler, found := r.Route(args[0])
 		if !found {
 			err := errors.New("Unknown command, use " + helpers.Code(prefix+"help"))
@@ -73,7 +75,8 @@ func (r *Router) Run(d *discordgo.Session) {
 		}
 
 		// Call handler method
-		err := handler.Handle(s, m)
+		// TODO pass args
+		err := handler.Handle(client.NewClientState(s, m))
 
 		if err != nil {
 			s.ChannelMessageSend(m.ChannelID,
@@ -137,7 +140,7 @@ func main() {
 	r.AddHandler(washi.Name, washi)
 	r.AddHandler(junai.Name, junai)
 
-	// Add help messages to help
+	// Add descriptions to help
 	help.AddDesc(&r.routes)
 	r.Run(dg)
 }

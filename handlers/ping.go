@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	//"github.com/VineBalloon/nozobot/helpers"
+	"github.com/VineBalloon/nozobot/client"
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -21,7 +21,10 @@ func (p *Ping) Channels() []string {
 	return nil
 }
 
-func (p *Ping) Handle(s *discordgo.Session, m *discordgo.MessageCreate) error {
+func (p *Ping) Handle(c *client.ClientState) error {
+	s := c.Session
+	m := c.Message
+
 	_, err := s.ChannelMessageSend(m.ChannelID, "Pong!")
 	if err != nil {
 		return err
