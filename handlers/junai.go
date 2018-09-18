@@ -27,12 +27,6 @@ func (j *Junai) Handle(c *client.ClientState) error {
 	s := c.Session
 	m := c.Message
 
-	// Create a new voice room
-	vr, err := client.NewVoiceRoom(s, m, sc)
-	if err != nil {
-		return err
-	}
-
 	// Create a new sound map
 	sm := map[string]*sounds.Sound{
 		"lens": sounds.NewSound("lens", 100),
@@ -41,6 +35,12 @@ func (j *Junai) Handle(c *client.ClientState) error {
 	// Create a new sound collection with our sound map
 	sc := sounds.NewSoundCollection(j.Name, sm)
 
+	// Create a new voice room with the SoundCollection
+	vr, err := client.NewVoiceRoom(s, m, sc)
+	if err != nil {
+		return err
+	}
+
 	// Connect to the voice channel
 	err = vr.Connect(s)
 	if err != nil {
@@ -48,15 +48,16 @@ func (j *Junai) Handle(c *client.ClientState) error {
 	}
 
 	// Play junai lens
-	vr.PlayName("lens")
+	vr.PlaySound("lens")
 
 	// Signal to the people that we are about to get rowdy
 	_, err = s.ChannelMessageSend(m.ChannelID, helpers.Bold("Ikuyoooo!"))
 	if err != nil {
+		vr.Close()
 		return err
 	}
 
-	// Close the voice connection
+	// Close the voice connection when we're done
 	vr.Close()
 	return nil
 }

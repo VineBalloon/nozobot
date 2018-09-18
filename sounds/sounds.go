@@ -2,7 +2,7 @@ package sounds
 
 // Some stuff stolen from airhorn bot
 // https://github.com/discordapp/airhornbot
-// As well as example code from dca
+// As well as example code from dca (check imports)
 
 import (
 	"errors"
@@ -26,7 +26,7 @@ type SoundCollection struct {
 	soundRange int
 }
 
-// CheckSound checks if the sound exists in the expected path
+// CheckSound checks if the sound exists on disk
 func (s *SoundCollection) CheckSound(name string) error {
 	// Get path
 	path := fmt.Sprintf("audio/%v/%v.wav",
@@ -36,23 +36,6 @@ func (s *SoundCollection) CheckSound(name string) error {
 	_, err := os.Open(path)
 	if err != nil {
 		return err
-	}
-	return nil
-}
-
-// Play a random sound from this collection
-func (s *SoundCollection) PlayRandom(vc *discordgo.VoiceConnection) *Sound {
-	var (
-		i      int
-		number int = randomRange(0, s.soundRange)
-	)
-
-	for _, sound := range s.Sounds {
-		i += sound.Weight
-
-		if number < i {
-			//sound.Play(
-		}
 	}
 	return nil
 }
@@ -80,6 +63,28 @@ func (s *SoundCollection) EncodeName(name string) (*dca.EncodeSession, error) {
 	return sound.Encode(s.Prefix)
 }
 
+// EncodeRandom picks and encodes a random sound from the sound collection
+func (s *SoundCollection) EncodeRandom() (*dca.EncodeSession, error) {
+	i := 0
+	number := randomRange(0, s.soundRange)
+
+	for _, sound := range s.Sounds {
+		i += sound.Weight
+
+		if number < i {
+			// Check that the sound exists on disk
+			err := s.CheckSound(sound.Name)
+			if err != nil {
+				return nil, err
+			}
+
+			// return the encoder
+			return sound.Encode(s.Prefix)
+		}
+	}
+	return nil
+}
+
 // NewSoundCollection constructs a new SoundCollection.
 // This should be called in each handler
 func NewSoundCollection(prefix string, sounds map[string]*sounds.Sound) *sounds.SoundCollection {
@@ -87,6 +92,9 @@ func NewSoundCollection(prefix string, sounds map[string]*sounds.Sound) *sounds.
 	sr := 0
 	for _, sound := range sounds {
 		sr += sound.Weight
+		if sound.Weight < 0 {
+			return nil, errors.New("sounds: cannot parse negative weights")
+		}
 	}
 
 	// Construct and return a new SoundCollection
@@ -94,7 +102,7 @@ func NewSoundCollection(prefix string, sounds map[string]*sounds.Sound) *sounds.
 		Prefix:     prefix,
 		Sounds:     sounds,
 		soundRange: sr,
-	}
+	}, nil
 }
 
 // Sound represents a sound clip
