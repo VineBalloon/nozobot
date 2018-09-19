@@ -21,9 +21,9 @@ func (p *Ping) Channels() []string {
 	return nil
 }
 
-func (p *Ping) Handle(c *client.ClientState) error {
-	s := c.Session
-	m := c.Message
+func (p *Ping) Handle(cs *client.ClientState) error {
+	s := cs.Session
+	m := cs.Message
 
 	_, err := s.ChannelMessageSend(m.ChannelID, "Pong!")
 	if err != nil {
@@ -32,7 +32,7 @@ func (p *Ping) Handle(c *client.ClientState) error {
 	return nil
 }
 
-func NewPing(n string) *Ping {
+func NewPing() *Ping {
 	return &Ping{
 		"Ping",
 	}

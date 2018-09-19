@@ -21,14 +21,14 @@ func (t *Tarot) Channels() []string {
 	return nil
 }
 
-func (t *Tarot) HandleTarot(c *client.ClientState) error {
-	//s := c.Session
-	//m := c.Message
+func (t *Tarot) HandleTarot(cs *client.ClientState) error {
+	//s := cs.Session
+	//m := cs.Message
 
 	return nil
 }
 
-func NewTarot(n string) *Tarot {
+func NewTarot() *Tarot {
 	return &Tarot{
 		"Tarot",
 	}

@@ -14,9 +14,6 @@ import (
 	"github.com/jonas747/dca"
 )
 
-// STOP is a global stop error for our async audio loop.
-var STOP error = errors.New("stop")
-
 // VoiceRoom is a wrapper around a voice connection
 // and a sound collection, with methods to manipulate both.
 type VoiceRoom struct {
@@ -24,9 +21,9 @@ type VoiceRoom struct {
 	id         string
 	Connection *discordgo.VoiceConnection
 
-	Sounds *sounds.SoundCollection
-	Stream *dca.StreamingSession
-	Done   chan error
+	Sounds  *sounds.SoundCollection
+	Stream  *dca.StreamingSession
+	StopSig chan struct{}
 }
 
 // Connect connects the session client to the voice room.
@@ -84,19 +81,28 @@ func (v *VoiceRoom) PlaySound(names ...string) error {
 
 	// Start a new stream from the encoding session
 	// to the discord voice connection
-	v.Done = make(chan error)
-	v.Stream = dca.NewStream(enc, v.Connection, v.Done)
+	done := make(chan error)
+	v.Stream = dca.NewStream(enc, v.Connection, done)
+
+	// Make a channel for us to stop the audio loop
+	v.StopSig = make(chan struct{})
+
+	// Some shit from dca example iunno probably use it for presence
 	ticker := time.NewTicker(time.Second)
 
 	// Async audio loop
 	for {
 		select {
-		case err := <-v.Done:
+		case <-v.StopSig:
+			// Received stop signal, return
+			v.StopSig = nil
+			return nil
+		case err := <-done:
 			// done channel has been sent an error, handle it
-			if err != nil && err != io.EOF && err != STOP {
+			if err != nil && err != io.EOF {
 				// Not 'done', some other error
 				v.Stream = nil
-				v.Done = nil
+				v.StopSig = nil
 				return err
 			}
 
@@ -151,8 +157,8 @@ func (v *VoiceRoom) Stop() error {
 	if v.Stream == nil {
 		return errors.New("stop: no voice stream to stop")
 	}
-	// Send stop signal to the Done channel
-	v.Done <- STOP
+	// Send stop signal to the StopSig channel
+	close(v.StopSig)
 	return nil
 }
 

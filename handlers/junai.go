@@ -23,9 +23,9 @@ func (j *Junai) Channels() []string {
 	return nil
 }
 
-func (j *Junai) Handle(c *client.ClientState) error {
-	s := c.Session
-	m := c.Message
+func (j *Junai) Handle(cs *client.ClientState) error {
+	s := cs.Session
+	m := cs.Message
 
 	// Create a new sound map
 	sm := map[string]*sounds.Sound{
@@ -39,33 +39,33 @@ func (j *Junai) Handle(c *client.ClientState) error {
 	}
 
 	// Create a new voice room with the SoundCollection
-	vr, err := client.NewVoiceRoom(s, m, sc)
+	cs.Voice, err = client.NewVoiceRoom(s, m, sc)
 	if err != nil {
 		return err
 	}
 
 	// Connect to the voice channel
-	err = vr.Connect(s)
+	err = cs.Voice.Connect(s)
 	if err != nil {
 		return err
 	}
-
-	// Play junai lens
-	vr.PlaySound("lens")
 
 	// Signal to the people that we are about to get rowdy
 	_, err = s.ChannelMessageSend(m.ChannelID, helpers.Bold("Ikuyoooo!"))
 	if err != nil {
-		vr.Close()
+		cs.Voice.Close()
 		return err
 	}
 
+	// Play junai lens
+	cs.Voice.PlaySound("lens")
+
 	// Close the voice connection when we're done
-	vr.Close()
+	cs.Voice.Close()
 	return nil
 }
 
-func NewJunai(n string) *Junai {
+func NewJunai() *Junai {
 	return &Junai{
 		"Junai",
 	}

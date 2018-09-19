@@ -22,9 +22,9 @@ func (w *Washi) Channels() []string {
 	return nil
 }
 
-func (w *Washi) Handle(c *client.ClientState) error {
-	s := c.Session
-	m := c.Message
+func (w *Washi) Handle(cs *client.ClientState) error {
+	s := cs.Session
+	m := cs.Message
 
 	_, err := s.ChannelMessageSend(m.ChannelID, "Washi Washi!")
 	if err != nil {
@@ -62,7 +62,7 @@ func (w *Washi) Handle(c *client.ClientState) error {
 	return nil
 }
 
-func NewWashi(n string) *Washi {
+func NewWashi() *Washi {
 	return &Washi{
 		"Washi",
 	}

@@ -22,9 +22,9 @@ func (h *Help) AddDesc(r *map[string]Handler) {
 	}
 }
 
-func (h *Help) Handle(c *client.ClientState) error {
-	s := c.Session
-	m := c.Message
+func (h *Help) Handle(cs *client.ClientState) error {
+	s := cs.Session
+	m := cs.Message
 
 	out := helpers.Bold("Commands:\n")
 	sorted := []string{}
@@ -53,7 +53,7 @@ func (h *Help) Channels() []string {
 	return nil
 }
 
-func NewHelp(n string, p string) *Help {
+func NewHelp(p string) *Help {
 	return &Help{
 		"help",
 		nil,

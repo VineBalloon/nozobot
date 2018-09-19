@@ -44,6 +44,7 @@ func (r *Router) Route(cmd string) (handlers.Handler, bool) {
 
 // Method to run the router
 func (r *Router) Run(d *discordgo.Session) {
+	cs := client.NewClientState(nil, nil)
 	// Add anonymous function to route messages to handlers
 	// this gets called when a message is read by the bot
 	d.AddHandler(func(s *discordgo.Session, m *discordgo.MessageCreate) {
@@ -74,9 +75,11 @@ func (r *Router) Run(d *discordgo.Session) {
 			return
 		}
 
+		// Update the ClientState
+		cs.UpdateSession(s, m.Message)
+
 		// Call handler method
-		// TODO pass args
-		err := handler.Handle(client.NewClientState(s, m.Message))
+		err := handler.Handle(cs)
 
 		if err != nil {
 			s.ChannelMessageSend(m.ChannelID,
@@ -128,10 +131,11 @@ func main() {
 	}
 
 	// Genearte command structs
-	help := handlers.NewHelp("help", prefix)
-	ping := handlers.NewPing("ping")
-	washi := handlers.NewWashi("washi")
-	junai := handlers.NewJunai("junai")
+	help := handlers.NewHelp(prefix)
+	ping := handlers.NewPing()
+	washi := handlers.NewWashi()
+	junai := handlers.NewJunai()
+	stop := handlers.NewStop()
 
 	// Route messages based on their command
 	r := NewRouter()
@@ -139,6 +143,7 @@ func main() {
 	r.AddHandler(ping.Name, ping)
 	r.AddHandler(washi.Name, washi)
 	r.AddHandler(junai.Name, junai)
+	r.AddHandler(stop.Name, stop)
 
 	// Add descriptions to help
 	help.AddDesc(&r.routes)
