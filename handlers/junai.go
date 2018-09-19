@@ -4,7 +4,7 @@ import (
 	"github.com/VineBalloon/nozobot/client"
 	"github.com/VineBalloon/nozobot/helpers"
 	"github.com/VineBalloon/nozobot/sounds"
-	"github.com/bwmarrin/discordgo"
+	//"github.com/bwmarrin/discordgo"
 )
 
 type Junai struct {
@@ -33,7 +33,10 @@ func (j *Junai) Handle(c *client.ClientState) error {
 	}
 
 	// Create a new sound collection with our sound map
-	sc := sounds.NewSoundCollection(j.Name, sm)
+	sc, err := sounds.NewSoundCollection(j.Name, sm)
+	if err != nil {
+		return err
+	}
 
 	// Create a new voice room with the SoundCollection
 	vr, err := client.NewVoiceRoom(s, m, sc)

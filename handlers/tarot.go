@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"github.com/VineBalloon/nozobot/client"
-	"github.com/bwmarrin/discordgo"
+	//"github.com/bwmarrin/discordgo"
 )
 
 type Tarot struct {
@@ -22,8 +22,8 @@ func (t *Tarot) Channels() []string {
 }
 
 func (t *Tarot) HandleTarot(c *client.ClientState) error {
-	s := c.Session
-	m := c.Message
+	//s := c.Session
+	//m := c.Message
 
 	return nil
 }

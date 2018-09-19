@@ -1,12 +1,9 @@
 package handlers
 
 import (
-	"time"
-
 	"github.com/VineBalloon/nozobot/client"
-	//"github.com/VineBalloon/nozobot/sounds"
-	"github.com/VineBalloon/nozobot/voice"
-	"github.com/bwmarrin/discordgo"
+	"github.com/VineBalloon/nozobot/sounds"
+	//"github.com/bwmarrin/discordgo"
 )
 
 type Washi struct {
@@ -34,19 +31,22 @@ func (w *Washi) Handle(c *client.ClientState) error {
 		return err
 	}
 
-	// Create a voice room
-	vr, err := voice.NewVoiceRoom(s, m.Message)
-	if err != nil {
-		return err
-	}
-
 	// Create a new sound map
 	sm := map[string]*sounds.Sound{
 		"1": sounds.NewSound("1", 10),
 	}
 
 	// Create a new sound collection with our sound map
-	sounds.NewSoundCollection(w.Name, sm)
+	sc, err := sounds.NewSoundCollection(w.Name, sm)
+	if err != nil {
+		return err
+	}
+
+	// Create a voice room
+	vr, err := client.NewVoiceRoom(s, m, sc)
+	if err != nil {
+		return err
+	}
 
 	// Connect to the voice room
 	err = vr.Connect(s)
@@ -55,7 +55,7 @@ func (w *Washi) Handle(c *client.ClientState) error {
 	}
 
 	// Play a random sound
-	vr.PlayRandom()
+	vr.PlaySound()
 
 	// Close the voice connection
 	vr.Close()

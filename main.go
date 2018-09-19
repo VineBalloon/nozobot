@@ -76,7 +76,7 @@ func (r *Router) Run(d *discordgo.Session) {
 
 		// Call handler method
 		// TODO pass args
-		err := handler.Handle(client.NewClientState(s, m))
+		err := handler.Handle(client.NewClientState(s, m.Message))
 
 		if err != nil {
 			s.ChannelMessageSend(m.ChannelID,

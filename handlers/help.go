@@ -6,7 +6,7 @@ import (
 
 	"github.com/VineBalloon/nozobot/client"
 	"github.com/VineBalloon/nozobot/helpers"
-	"github.com/bwmarrin/discordgo"
+	//"github.com/bwmarrin/discordgo"
 )
 
 type Help struct {

@@ -7,13 +7,11 @@ package sounds
 import (
 	"errors"
 	"fmt"
-	"io"
 	"math/rand"
 	"os"
 	"strings"
 	"time"
 
-	"github.com/bwmarrin/discordgo"
 	"github.com/jonas747/dca"
 )
 
@@ -82,12 +80,12 @@ func (s *SoundCollection) EncodeRandom() (*dca.EncodeSession, error) {
 			return sound.Encode(s.Prefix)
 		}
 	}
-	return nil
+	return nil, errors.New("encoderandom: this should never happen")
 }
 
 // NewSoundCollection constructs a new SoundCollection.
 // This should be called in each handler
-func NewSoundCollection(prefix string, sounds map[string]*sounds.Sound) *sounds.SoundCollection {
+func NewSoundCollection(prefix string, sounds map[string]*Sound) (*SoundCollection, error) {
 	// Iterate through sounds and get the range for weights
 	sr := 0
 	for _, sound := range sounds {
@@ -98,7 +96,7 @@ func NewSoundCollection(prefix string, sounds map[string]*sounds.Sound) *sounds.
 	}
 
 	// Construct and return a new SoundCollection
-	return &sounds.SoundCollection{
+	return &SoundCollection{
 		Prefix:     prefix,
 		Sounds:     sounds,
 		soundRange: sr,

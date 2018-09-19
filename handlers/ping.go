@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"github.com/VineBalloon/nozobot/client"
-	"github.com/bwmarrin/discordgo"
+	//"github.com/bwmarrin/discordgo"
 )
 
 type Ping struct {

@@ -7,8 +7,10 @@ package client
 import (
 	"errors"
 	"io"
+	"time"
 
 	"github.com/VineBalloon/nozobot/sounds"
+	"github.com/bwmarrin/discordgo"
 	"github.com/jonas747/dca"
 )
 
@@ -49,24 +51,30 @@ func (v *VoiceRoom) PlaySound(names ...string) error {
 	}
 
 	// Check our slice of names
+	var enc *dca.EncodeSession
+	var err error
 	switch {
 	case len(names) == 0:
 		// Get random sound
-		enc, err := v.Sounds.EncodeRandom()
+		enc, err = v.Sounds.EncodeRandom()
+		if err != nil {
+			return err
+		}
+
 	case len(names) == 1:
 		// Get the named sound
-		enc, err := v.Sounds.EncodeName(name[0])
+		enc, err = v.Sounds.EncodeName(names[0])
+		if err != nil {
+			return err
+		}
+
 	default:
 		// Only handle 0 or 1 sounds
 		return errors.New("playsound: invalid number of sounds")
 	}
 
-	if err != nil {
-		return err
-	}
-
 	// Send speaking packet over voice websocket
-	err := v.Connection.Speaking(true)
+	err = v.Connection.Speaking(true)
 	if err != nil {
 		return err
 	}
@@ -77,7 +85,7 @@ func (v *VoiceRoom) PlaySound(names ...string) error {
 	// Start a new stream from the encoding session
 	// to the discord voice connection
 	v.Done = make(chan error)
-	v.Stream = dca.NewStream(enc, vc, v.Done)
+	v.Stream = dca.NewStream(enc, v.Connection, v.Done)
 	ticker := time.NewTicker(time.Second)
 
 	// Async audio loop
@@ -97,7 +105,7 @@ func (v *VoiceRoom) PlaySound(names ...string) error {
 		case <-ticker.C:
 			// Ticker when not done
 			//stats := enc.Stats()
-			playPos := v.Stream.PlaybackPosition()
+			//playPos := v.Stream.PlaybackPosition()
 		}
 	}
 
@@ -107,14 +115,14 @@ func (v *VoiceRoom) PlaySound(names ...string) error {
 }
 
 // Pause attempts to pause the current stream.
-func (v *VoiceRoom) Pause() {
+func (v *VoiceRoom) Pause() error {
 	s := v.Stream
 	if s == nil {
 		return errors.New("pause: no voice stream to pause")
 	}
 
 	if s.Paused() {
-		return erros.New("pause: already paused")
+		return errors.New("pause: already paused")
 	}
 
 	v.Stream.SetPaused(true)
@@ -130,7 +138,7 @@ func (v *VoiceRoom) UnPause() error {
 	}
 
 	if !s.Paused() {
-		return erros.New("unpause: already unpaused")
+		return errors.New("unpause: already unpaused")
 	}
 
 	v.Stream.SetPaused(false)
