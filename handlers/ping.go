@@ -2,9 +2,10 @@ package handlers
 
 import (
 	"github.com/VineBalloon/nozobot/client"
-	//"github.com/bwmarrin/discordgo"
 )
 
+// Ping
+// The command to ping the user when they ask for it
 type Ping struct {
 	Name string
 }
@@ -21,6 +22,8 @@ func (p *Ping) Channels() []string {
 	return nil
 }
 
+// Handle
+// Responds with "Pong!" when user sends a ping command
 func (p *Ping) Handle(cs *client.ClientState) error {
 	s := cs.Session
 	m := cs.Message

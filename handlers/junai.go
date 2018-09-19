@@ -4,9 +4,10 @@ import (
 	"github.com/VineBalloon/nozobot/client"
 	"github.com/VineBalloon/nozobot/helpers"
 	"github.com/VineBalloon/nozobot/sounds"
-	//"github.com/bwmarrin/discordgo"
 )
 
+// Junai
+// The command to play Junai Lens in voice chat
 type Junai struct {
 	Name string
 }
@@ -23,6 +24,11 @@ func (j *Junai) Channels() []string {
 	return nil
 }
 
+// Handle
+// Tries to join voice, fails if already joined or if user isn't in one.
+// Plays Junai Lens on successful join.
+// NB: This function keeps an async loop alive until the stream ends.
+// You can stop it completely using the StopSig channel
 func (j *Junai) Handle(cs *client.ClientState) error {
 	s := cs.Session
 	m := cs.Message

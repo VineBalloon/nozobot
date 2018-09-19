@@ -21,7 +21,7 @@ func (t *Tarot) Channels() []string {
 	return nil
 }
 
-func (t *Tarot) HandleTarot(cs *client.ClientState) error {
+func (t *Tarot) Handle(cs *client.ClientState) error {
 	//s := cs.Session
 	//m := cs.Message
 

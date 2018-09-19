@@ -9,12 +9,17 @@ import (
 	//"github.com/bwmarrin/discordgo"
 )
 
+// Help
+// The command to generate help messages from other commands
 type Help struct {
 	Name         string
 	descriptions map[string]string
 	prefix       string
 }
 
+// AddDesc
+// Generates descriptions given the router's string->handler map.
+// This method is unique to the Help command
 func (h *Help) AddDesc(r *map[string]Handler) {
 	h.descriptions = make(map[string]string)
 	for cmd, handler := range *r {
@@ -22,6 +27,8 @@ func (h *Help) AddDesc(r *map[string]Handler) {
 	}
 }
 
+// Handle
+// Constructs the help message and cleanly formats it
 func (h *Help) Handle(cs *client.ClientState) error {
 	s := cs.Session
 	m := cs.Message
@@ -53,10 +60,12 @@ func (h *Help) Channels() []string {
 	return nil
 }
 
-func NewHelp(p string) *Help {
+// NewHelp
+// Constructs a new help struct. Requires the command prefix.
+func NewHelp(prefix string) *Help {
 	return &Help{
 		"help",
 		nil,
-		p,
+		prefix,
 	}
 }
