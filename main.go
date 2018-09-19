@@ -86,7 +86,7 @@ func (r *Router) Run(d *discordgo.Session) {
 	})
 
 	// Don't close the connection, wait for a kill signal
-	fmt.Println("Ctrl-C to kill")
+	fmt.Println("μ's! Muuuusic, start!")
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
 	<-sc
