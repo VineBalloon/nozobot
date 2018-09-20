@@ -14,26 +14,30 @@ import (
 
 	"github.com/VineBalloon/nozobot/client"
 	"github.com/VineBalloon/nozobot/handlers"
-	"github.com/VineBalloon/nozobot/helpers"
+	h "github.com/VineBalloon/nozobot/helpers"
 	"github.com/bwmarrin/discordgo"
 )
 
-// Global var for our token
+// Global vars
 var (
 	token  string
 	prefix = "!"
-	help   = []string{}
 )
 
-// Router struct to hold our string->router mappings
+// Router
+// Struct to hold our string->router mappings
 type Router struct {
 	routes map[string]handlers.Handler
 }
 
+// AddHandler
+// Adds a string->handler mapping to the router
 func (r *Router) AddHandler(cmd string, handler handlers.Handler) {
 	r.routes[strings.ToLower(cmd)] = handler
 }
 
+// Route
+// Returns the handler
 func (r *Router) Route(cmd string) (handlers.Handler, bool) {
 	routes := r.routes[cmd]
 	if routes == nil {
@@ -42,7 +46,8 @@ func (r *Router) Route(cmd string) (handlers.Handler, bool) {
 	return routes, true
 }
 
-// Method to run the router
+// Run
+// Runs the discordgo handler and routes to our handlers
 func (r *Router) Run(d *discordgo.Session) {
 	cs := client.NewClientState(nil, nil)
 	// Add anonymous function to route messages to handlers
@@ -69,9 +74,8 @@ func (r *Router) Run(d *discordgo.Session) {
 		// Find handler using router
 		handler, found := r.Route(args[0])
 		if !found {
-			err := errors.New("Unknown command, use " + helpers.Code(prefix+"help"))
 			s.ChannelMessageSend(m.ChannelID,
-				helpers.Italics("Error: "+err.Error()))
+				h.Italics("Ara Ara: Unknown command, use "+h.Code(prefix+"help")))
 			return
 		}
 
@@ -81,9 +85,11 @@ func (r *Router) Run(d *discordgo.Session) {
 		// Call handler method
 		err := handler.Handle(cs)
 
+		// Got error from handler, throw it
 		if err != nil {
+			fmt.Println(err.Error())
 			s.ChannelMessageSend(m.ChannelID,
-				helpers.Italics("Error: "+err.Error()))
+				h.Italics("Ara Ara:"+strings.Split(err.Error(), ":")[1:]))
 			return
 		}
 	})
@@ -97,6 +103,7 @@ func (r *Router) Run(d *discordgo.Session) {
 	d.Close()
 }
 
+// NewRouter
 // Constructor for Router struct
 func NewRouter() *Router {
 	r := make(map[string]handlers.Handler)
@@ -130,7 +137,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Genearte command structs
+	// Generate command structs
 	help := handlers.NewHelp(prefix)
 	ping := handlers.NewPing()
 	washi := handlers.NewWashi()

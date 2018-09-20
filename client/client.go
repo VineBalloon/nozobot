@@ -19,7 +19,8 @@ type ClientState struct {
 	Arguments []string
 }
 
-// UpdateSession updates the current discord session and message.
+// UpdateSession
+// Updates the current discord session and message.
 // It also parses the space separated arguments
 func (c *ClientState) UpdateSession(s *discordgo.Session, m *discordgo.Message) {
 	c.Session = s
@@ -27,12 +28,15 @@ func (c *ClientState) UpdateSession(s *discordgo.Session, m *discordgo.Message) 
 	c.Arguments = strings.Split(m.Content, " ")[1:]
 }
 
-// AddVoice adds a VoiceRoom to ClientState
+// AddVoice
+// Adds a VoiceRoom to ClientState
 func (c *ClientState) AddVoice(vr *VoiceRoom) {
 	c.Voice = vr
 }
 
-// StopStream stops the stream if it exists, errors otherwise
+// StopStream
+// Stops the audio stream if it exists.
+// Does not disconnect the bot.
 func (c *ClientState) StopStream() error {
 	if c.Voice == nil {
 		return errors.New("client: no voice room")
@@ -42,6 +46,14 @@ func (c *ClientState) StopStream() error {
 		return err
 	}
 	return nil
+}
+
+// Close
+// Close all connections if there are any
+func (c *ClientState) Close() {
+	c.StopStream()
+	c.Session.Close()
+	c.Voice.Close()
 }
 
 // NewClientState constructs a new ClientState

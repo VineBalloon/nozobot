@@ -14,8 +14,9 @@ import (
 	"github.com/jonas747/dca"
 )
 
-// VoiceRoom is a wrapper around a voice connection
-// and a sound collection, with methods to manipulate both.
+// VoiceRoom
+// A wrapper around a voice connection and a sound collection,
+// with methods to manipulate both.
 type VoiceRoom struct {
 	guild      string
 	id         string
@@ -26,7 +27,8 @@ type VoiceRoom struct {
 	StopSig chan struct{}
 }
 
-// Connect connects the session client to the voice room.
+// Connect
+// Connects the session client to the voice room.
 func (v *VoiceRoom) Connect(s *discordgo.Session) error {
 	// Attempt to generate a voice connection
 	vc, err := s.ChannelVoiceJoin(v.guild, v.id, false, false)
@@ -34,8 +36,9 @@ func (v *VoiceRoom) Connect(s *discordgo.Session) error {
 	return err
 }
 
-// PlaySound plays a random sound from the sound collection if no name is given
-// and the named sound if one was given.
+// PlaySound
+// Plays a named sound from the sound collection
+// and a random sound if no name is given
 func (v *VoiceRoom) PlaySound(names ...string) error {
 	// Check if we are already playing something
 	if v.Stream != nil {
@@ -120,7 +123,8 @@ func (v *VoiceRoom) PlaySound(names ...string) error {
 	return nil
 }
 
-// Pause attempts to pause the current stream.
+// Pause
+// Attempts to pause the current stream.
 func (v *VoiceRoom) Pause() error {
 	s := v.Stream
 	if s == nil {
@@ -136,11 +140,12 @@ func (v *VoiceRoom) Pause() error {
 	return nil
 }
 
-// UnPause attempts to pause the current stream.
+// UnPause
+// Attempts to unpause the current stream.
 func (v *VoiceRoom) UnPause() error {
 	s := v.Stream
 	if s == nil {
-		return errors.New("pause: no voice stream to pause")
+		return errors.New("unpause: no voice stream to pause")
 	}
 
 	if !s.Paused() {
@@ -152,7 +157,8 @@ func (v *VoiceRoom) UnPause() error {
 	return nil
 }
 
-// Stop tries to gracefully end the streaming session without disconnecting.
+// Stop
+// Gracefully end the streaming session without disconnecting.
 func (v *VoiceRoom) Stop() error {
 	if v.Stream == nil {
 		return errors.New("stop: no voice stream to stop")
@@ -162,15 +168,16 @@ func (v *VoiceRoom) Stop() error {
 	return nil
 }
 
-// Close closes the voice connection with discord and flushes the connection pointer.
+// Close
+// Closes the voice connection with discord and flushes the connection pointer.
 func (v *VoiceRoom) Close() error {
 	err := v.Connection.Disconnect()
 	v.Connection = nil
 	return err
 }
 
-// NewVoiceRoom creates a new Voice Room using the current session and message received.
-// It uses the helper function VoiceInfoFromMessage. Use Connect to connect to the channel.
+// NewVoiceRoom
+// Creates a new Voice Room using the current session and message received.
 func NewVoiceRoom(s *discordgo.Session, m *discordgo.Message, sounds *sounds.SoundCollection) (*VoiceRoom, error) {
 
 	// Get the voice info from the message
@@ -187,7 +194,8 @@ func NewVoiceRoom(s *discordgo.Session, m *discordgo.Message, sounds *sounds.Sou
 	}, nil
 }
 
-// VoiceInfoFromMessage is a helper function to get guild and vc id
+// VoiceInfoFromMessage
+// A helper function to get guild and vc id
 // from the current discord session and message received
 func VoiceInfoFromMessage(s *discordgo.Session, m *discordgo.Message) (string, string, error) {
 	// Get the guild and guild ID
