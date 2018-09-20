@@ -4,7 +4,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -89,7 +88,7 @@ func (r *Router) Run(d *discordgo.Session) {
 		if err != nil {
 			fmt.Println(err.Error())
 			s.ChannelMessageSend(m.ChannelID,
-				h.Italics("Ara Ara:"+strings.Split(err.Error(), ":")[1:]))
+				h.Italics("Ara Ara:"+strings.Join(strings.Split(err.Error(), ":")[1:], ":")))
 			return
 		}
 	})
