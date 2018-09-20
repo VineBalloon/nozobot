@@ -64,8 +64,8 @@ func (w *Washi) Handle(cs *client.ClientState) error {
 	// Play a random sound
 	vr.PlaySound()
 
-	// Close the voice connection
-	vr.Close()
+	// Leave the voice connection
+	vr.Leave()
 	return nil
 }
 

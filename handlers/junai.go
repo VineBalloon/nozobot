@@ -59,15 +59,11 @@ func (j *Junai) Handle(cs *client.ClientState) error {
 	// Signal to the people that we are about to get rowdy
 	_, err = s.ChannelMessageSend(m.ChannelID, helpers.Bold("Ikuyoooo!"))
 	if err != nil {
-		cs.Voice.Close()
 		return err
 	}
 
 	// Play junai lens
 	cs.Voice.PlaySound("lens")
-
-	// Close the voice connection when we're done
-	cs.Voice.Close()
 	return nil
 }
 

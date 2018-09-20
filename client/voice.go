@@ -2,12 +2,9 @@ package client
 
 // This file contains the wrapper struct for voice connections
 // and methods to manipulate the VoiceConnection
-// The voice transmission is tightly coupled with the sounds package
 
 import (
 	"errors"
-	"io"
-	"time"
 
 	"github.com/VineBalloon/nozobot/sounds"
 	"github.com/bwmarrin/discordgo"
@@ -36,144 +33,26 @@ func (v *VoiceRoom) Connect(s *discordgo.Session) error {
 	return err
 }
 
-// PlaySound
-// Plays a named sound from the sound collection
-// and a random sound if no name is given
-func (v *VoiceRoom) PlaySound(names ...string) error {
-	// Check if we are already playing something
-	if v.Stream != nil {
-		return errors.New("client: already playing something")
+// Leave
+// Leaves the voice connection with discord and flushes the connection pointer.
+func (v *VoiceRoom) Leave() error {
+	// Check connection
+	if v.Connection != nil {
+		return errors.New("leave: nothing to leave")
 	}
 
-	// Check if voice room has a sound collection
-	if v.Sounds == nil {
-		return errors.New("client: no sound collection in voice room")
-	}
+	// Send stop signal
+	close(v.StopSig)
 
-	// Check our slice of names
-	var enc *dca.EncodeSession
-	var err error
-	switch {
-	case len(names) == 0:
-		// Get random sound
-		enc, err = v.Sounds.EncodeRandom()
-		if err != nil {
-			return err
-		}
-
-	case len(names) == 1:
-		// Get the named sound
-		enc, err = v.Sounds.EncodeName(names[0])
-		if err != nil {
-			return err
-		}
-
-	default:
-		// Only handle 0 or 1 sounds
-		return errors.New("playsound: invalid number of sounds")
-	}
-
-	// Send speaking packet over voice websocket
-	err = v.Connection.Speaking(true)
+	// Close voice connection
+	err := v.Connection.Close()
 	if err != nil {
 		return err
 	}
 
-	// Cleanup when we're done
-	defer v.Connection.Speaking(false)
-
-	// Start a new stream from the encoding session
-	// to the discord voice connection
-	done := make(chan error)
-	v.Stream = dca.NewStream(enc, v.Connection, done)
-
-	// Make a channel for us to stop the audio loop
-	v.StopSig = make(chan struct{})
-
-	// Some shit from dca example iunno probably use it for presence
-	ticker := time.NewTicker(time.Second)
-
-	// Async audio loop
-	for {
-		select {
-		case <-v.StopSig:
-			// Received stop signal, return
-			v.StopSig = nil
-			return nil
-		case err := <-done:
-			// done channel has been sent an error, handle it
-			if err != nil && err != io.EOF {
-				// Not 'done', some other error
-				v.Stream = nil
-				v.StopSig = nil
-				return err
-			}
-
-			// Stream done, clean up encoder
-			enc.Cleanup()
-		case <-ticker.C:
-			// Ticker when not done
-			//stats := enc.Stats()
-			//playPos := v.Stream.PlaybackPosition()
-		}
-	}
-
-	// Cleanup the stream
-	v.Stream = nil
-	return nil
-}
-
-// Pause
-// Attempts to pause the current stream.
-func (v *VoiceRoom) Pause() error {
-	s := v.Stream
-	if s == nil {
-		return errors.New("pause: no voice stream to pause")
-	}
-
-	if s.Paused() {
-		return errors.New("pause: already paused")
-	}
-
-	v.Stream.SetPaused(true)
-
-	return nil
-}
-
-// UnPause
-// Attempts to unpause the current stream.
-func (v *VoiceRoom) UnPause() error {
-	s := v.Stream
-	if s == nil {
-		return errors.New("unpause: no voice stream to pause")
-	}
-
-	if !s.Paused() {
-		return errors.New("unpause: already unpaused")
-	}
-
-	v.Stream.SetPaused(false)
-
-	return nil
-}
-
-// Stop
-// Gracefully end the streaming session without disconnecting.
-func (v *VoiceRoom) Stop() error {
-	if v.Stream == nil {
-		return errors.New("stop: no voice stream to stop")
-	}
-	// Send stop signal to the StopSig channel
-	close(v.StopSig)
-	return nil
-}
-
-// Close
-// Closes the voice connection with discord and flushes the connection pointer.
-func (v *VoiceRoom) Close() error {
-	err := v.Connection.Disconnect()
+	// Reset connection pointer
 	v.Connection = nil
-	return err
+	return nil
 }
 
 // NewVoiceRoom

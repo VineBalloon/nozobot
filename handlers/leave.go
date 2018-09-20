@@ -33,8 +33,8 @@ func (p *Leave) Handle(cs *client.ClientState) error {
 		return err
 	}
 
-	// Close all connections
-	err = cs.Close()
+	// Leave the voice connection
+	err = cs.Voice.Leave()
 	if err != nil {
 		return err
 	}

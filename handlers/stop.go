@@ -27,7 +27,7 @@ func (s *Stop) Handle(cs *client.ClientState) error {
 	m := cs.Message
 
 	// Stop the streaming session
-	err := cs.StopStream()
+	err := cs.Voice.Stop()
 	if err != nil {
 		return err
 	}
