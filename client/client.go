@@ -50,10 +50,20 @@ func (c *ClientState) StopStream() error {
 
 // Close
 // Close all connections if there are any
-func (c *ClientState) Close() {
-	c.StopStream()
-	c.Session.Close()
-	c.Voice.Close()
+func (c *ClientState) Close() error {
+	err := c.StopStream()
+	if err != nil {
+		return err
+	}
+	err = c.Session.Close()
+	if err != nil {
+		return err
+	}
+	err = c.Voice.Close()
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // NewClientState constructs a new ClientState

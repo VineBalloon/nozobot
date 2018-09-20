@@ -142,6 +142,7 @@ func main() {
 	washi := handlers.NewWashi()
 	junai := handlers.NewJunai()
 	stop := handlers.NewStop()
+	leave := handlers.NewLeave()
 
 	// Route messages based on their command
 	r := NewRouter()
@@ -150,6 +151,7 @@ func main() {
 	r.AddHandler(washi.Name, washi)
 	r.AddHandler(junai.Name, junai)
 	r.AddHandler(stop.Name, stop)
+	r.AddHandler(leave.Name, leave)
 
 	// Add descriptions to help
 	help.AddDesc(&r.routes)

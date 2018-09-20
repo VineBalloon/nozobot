@@ -23,7 +23,7 @@ func (s *Stop) Channels() []string {
 // Handle
 // Tries to stop the current streaming session if there is one.
 func (s *Stop) Handle(cs *client.ClientState) error {
-	s := cs.Session
+	ss := cs.Session
 	m := cs.Message
 
 	// Stop the streaming session
@@ -33,7 +33,7 @@ func (s *Stop) Handle(cs *client.ClientState) error {
 	}
 
 	// Signal that we've stopped
-	_, err = s.ChannelMessageSend(m.ChannelID, "Stopped!")
+	_, err = ss.ChannelMessageSend(m.ChannelID, "Stopped!")
 	if err != nil {
 		return err
 	}

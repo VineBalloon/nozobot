@@ -18,8 +18,8 @@ import (
 // A wrapper around a voice connection and a sound collection,
 // with methods to manipulate both.
 type VoiceRoom struct {
-	guild      string
-	id         string
+	Guild      string
+	Id         string
 	Connection *discordgo.VoiceConnection
 
 	Sounds  *sounds.SoundCollection
@@ -31,7 +31,7 @@ type VoiceRoom struct {
 // Connects the session client to the voice room.
 func (v *VoiceRoom) Connect(s *discordgo.Session) error {
 	// Attempt to generate a voice connection
-	vc, err := s.ChannelVoiceJoin(v.guild, v.id, false, false)
+	vc, err := s.ChannelVoiceJoin(v.Guild, v.Id, false, false)
 	v.Connection = vc
 	return err
 }
@@ -187,8 +187,8 @@ func NewVoiceRoom(s *discordgo.Session, m *discordgo.Message, sounds *sounds.Sou
 	}
 
 	return &VoiceRoom{
-		guild:      guild,
-		id:         channel,
+		Guild:      guild,
+		Id:         channel,
 		Connection: nil,
 		Sounds:     sounds,
 	}, nil
