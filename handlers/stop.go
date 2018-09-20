@@ -8,21 +8,21 @@ type Stop struct {
 	Name string
 }
 
-func (p *Stop) Desc() string {
+func (s *Stop) Desc() string {
 	return "Stops all audio in a pinchi :sparkling_heart:"
 }
 
-func (p *Stop) Roles() []string {
+func (s *Stop) Roles() []string {
 	return nil
 }
 
-func (p *Stop) Channels() []string {
+func (s *Stop) Channels() []string {
 	return nil
 }
 
 // Handle
 // Tries to stop the current streaming session if there is one.
-func (p *Stop) Handle(cs *client.ClientState) error {
+func (s *Stop) Handle(cs *client.ClientState) error {
 	s := cs.Session
 	m := cs.Message
 
