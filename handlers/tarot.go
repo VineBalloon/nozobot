@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"github.com/VineBalloon/nozobot/client"
-	//"github.com/bwmarrin/discordgo"
 )
 
 type Tarot struct {

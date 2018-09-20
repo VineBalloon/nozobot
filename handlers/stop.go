@@ -1,9 +1,6 @@
 package handlers
 
-import (
-	"github.com/VineBalloon/nozobot/client"
-	//"github.com/bwmarrin/discordgo"
-)
+import "github.com/VineBalloon/nozobot/client"
 
 // Stop
 // The command to stop any audio streaming session gracefully
