@@ -38,7 +38,7 @@ func (r *Router) AddHandler(handler handlers.Handler) {
 }
 
 // Route
-// Returns the handler
+// Routes to handler from string
 func (r *Router) Route(cmd string) (handlers.Handler, bool) {
 	routes := r.routes[cmd]
 	if routes == nil {
@@ -48,7 +48,7 @@ func (r *Router) Route(cmd string) (handlers.Handler, bool) {
 }
 
 // Run
-// Runs the discordgo handler and routes to our handlers
+// Registers our event handler(s) to the discordgo session
 func (r *Router) Run(d *discordgo.Session) {
 	cs := client.NewClientState()
 
@@ -143,6 +143,5 @@ func init() {
 }
 
 func main() {
-	// Run
 	router.Run(dg)
 }
