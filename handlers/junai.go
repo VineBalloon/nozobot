@@ -9,11 +9,16 @@ import (
 // Junai
 // The command to play Junai Lens in voice chat
 type Junai struct {
-	Name string
+	name        string
+	description string
+}
+
+func (j *Junai) Name() string {
+	return j.name
 }
 
 func (j *Junai) Desc() string {
-	return "Nozomi sings Junai Lens for you!"
+	return j.description
 }
 
 func (j *Junai) Roles() []string {
@@ -29,7 +34,7 @@ func (j *Junai) Channels() []string {
 // Plays Junai Lens on successful join.
 // NB: This function keeps an async loop alive until the stream ends.
 // You can stop it completely using the StopSig channel
-func (j *Junai) Handle(cs *client.ClientState) error {
+func (j *Junai) MsgHandle(cs *client.ClientState) error {
 	s := cs.Session
 	m := cs.Message
 
@@ -39,7 +44,7 @@ func (j *Junai) Handle(cs *client.ClientState) error {
 	}
 
 	// Create a new sound collection with our sound map
-	sc, err := sounds.NewSoundCollection(j.Name, sm)
+	sc, err := sounds.NewSoundCollection(j.name, sm)
 	if err != nil {
 		return err
 	}
@@ -69,6 +74,7 @@ func (j *Junai) Handle(cs *client.ClientState) error {
 
 func NewJunai() *Junai {
 	return &Junai{
-		"Junai",
+		"junai",
+		"Nozomi sings Junai Lens for you!",
 	}
 }
