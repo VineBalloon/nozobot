@@ -37,18 +37,15 @@ func (v *VoiceRoom) Connect(s *discordgo.Session) error {
 // Leaves the voice connection with discord and flushes the connection pointer.
 func (v *VoiceRoom) Leave() error {
 	// Check connection
-	if v.Connection != nil {
+	if v.Connection == nil {
 		return errors.New("leave: nothing to leave")
 	}
 
-	// Send stop signal
-	close(v.StopSig)
+	// Stop
+	v.Stop()
 
 	// Close voice connection
-	err := v.Connection.Close()
-	if err != nil {
-		return err
-	}
+	v.Connection.Close()
 
 	// Reset connection pointer
 	v.Connection = nil
@@ -69,7 +66,10 @@ func NewVoiceRoom(s *discordgo.Session, m *discordgo.Message, sounds *sounds.Sou
 		Guild:      guild,
 		Id:         channel,
 		Connection: nil,
-		Sounds:     sounds,
+
+		Sounds:  sounds,
+		Stream:  nil,
+		StopSig: nil,
 	}, nil
 }
 
