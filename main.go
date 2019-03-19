@@ -143,5 +143,6 @@ func init() {
 }
 
 func main() {
+	// Run
 	router.Run(dg)
 }
