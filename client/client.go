@@ -4,24 +4,25 @@ package client
 // session and voice connection, and methods to manipulate the Session
 
 import (
+	"errors"
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
 )
 
-// ClientState is a wrapper around the discordgo session,
+// ClientState
+// A wrapper around the discordgo session,
 // the VoiceRoom wrapper, and the last message received
 type ClientState struct {
-	Session   *discordgo.Session
-	Voice     *VoiceRoom
-	Message   *discordgo.Message
-	Arguments []string
+	Session   *discordgo.Session /* The current session */
+	Voice     *VoiceRoom         /* Voice wrapper */
+	Message   *discordgo.Message /* Last message received */
+	Arguments []string           /* Arguments from the message */
 }
 
-// UpdateSession
-// Updates the current discord session and message.
-// It also parses the space separated arguments
-func (c *ClientState) UpdateSession(s *discordgo.Session, m *discordgo.Message) {
+// UpdateState
+// Updates the current discord session and last message received.
+func (c *ClientState) UpdateState(s *discordgo.Session, m *discordgo.Message) {
 	c.Session = s
 	c.Message = m
 	c.Arguments = strings.Split(m.Content, " ")[1:]
@@ -37,7 +38,10 @@ func (c *ClientState) AddVoice(vr *VoiceRoom) {
 // Closes all connections if there are any
 func (c *ClientState) Close() error {
 	// Leave voice connection, ignore errors
-	_ = c.Voice.Leave()
+	if c.Voice == nil {
+		return errors.New("close: no voice room to close")
+	}
+	c.Voice.Leave()
 
 	// Close discord connection
 	err := c.Session.Close()
@@ -48,11 +52,11 @@ func (c *ClientState) Close() error {
 }
 
 // NewClientState constructs a new ClientState
-func NewClientState(s *discordgo.Session, m *discordgo.Message) *ClientState {
+func NewClientState() *ClientState {
 	return &ClientState{
-		Session:   s,
-		Voice:     nil,
-		Message:   m,
-		Arguments: strings.Split(m.Content, " ")[1:],
+		nil,
+		nil,
+		nil,
+		nil,
 	}
 }
