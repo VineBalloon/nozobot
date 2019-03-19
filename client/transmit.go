@@ -3,6 +3,7 @@ package client
 // This file contains methods related to transmitting over the voice connection
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"time"
@@ -52,7 +53,6 @@ func (v *VoiceRoom) PlaySound(names ...string) error {
 	if err != nil {
 		return err
 	}
-	defer v.Connection.Speaking(false)
 
 	// Start a new stream from the encoding session
 	// to the discord voice connection
@@ -146,6 +146,7 @@ func (v *VoiceRoom) Stop() error {
 	if v.StopSig == nil {
 		return errors.New("stop: no voice stream to stop")
 	}
+
 	// Send stop signal to the StopSig channel
 	close(v.StopSig)
 	return nil
