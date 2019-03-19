@@ -43,12 +43,12 @@ func (s *SoundCollection) EncodeName(name string) (*dca.EncodeSession, error) {
 	// Get the named sound
 	sound, found := s.Sounds[name]
 	if !found {
-		return nil, errors.New("sound not found")
+		return nil, errors.New("encode: sound not found")
 	}
 
 	// Check for relative path things
 	if strings.Contains(name, "..") {
-		return nil, errors.New("nice try")
+		return nil, errors.New("encode: nice try")
 	}
 
 	// Check that the sound exists on disk
