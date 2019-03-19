@@ -79,8 +79,10 @@ func (r *Router) Run(d *discordgo.Session) {
 		err := handler.MsgHandle(cs)
 		if err != nil {
 			fmt.Println(err.Error())
-			s.ChannelMessageSend(m.ChannelID,
-				h.Italics("Ara Ara:"+strings.Join(strings.Split(err.Error(), ":")[1:], ":")))
+			var out strings.Builder
+			out.WriteString("Ara Ara:")
+			out.WriteString(strings.Join(strings.Split(err.Error(), ":")[1:], ":"))
+			s.ChannelMessageSend(m.ChannelID, h.Italics(out.String()))
 			return
 		}
 	})
@@ -137,6 +139,7 @@ func init() {
 	router.AddHandler(handlers.NewJunai())
 	router.AddHandler(handlers.NewStop())
 	router.AddHandler(handlers.NewLeave())
+	router.AddHandler(handlers.NewGay())
 
 	// Add Help last to enter descriptions properly
 	router.AddHandler(handlers.NewHelp(prefix, &router.routes))
