@@ -21,6 +21,8 @@ import (
 var (
 	token  string
 	prefix = "!"
+	router *Router
+	dg     *discordgo.Session
 )
 
 // Router
@@ -31,8 +33,8 @@ type Router struct {
 
 // AddHandler
 // Adds a string->handler mapping to the router
-func (r *Router) AddHandler(cmd string, handler handlers.Handler) {
-	r.routes[strings.ToLower(cmd)] = handler
+func (r *Router) AddHandler(handler handlers.Handler) {
+	r.routes[strings.ToLower(handler.Name())] = handler
 }
 
 // Route
@@ -48,11 +50,11 @@ func (r *Router) Route(cmd string) (handlers.Handler, bool) {
 // Run
 // Runs the discordgo handler and routes to our handlers
 func (r *Router) Run(d *discordgo.Session) {
-	cs := client.NewClientState(nil, nil)
-	// Add anonymous function to route messages to handlers
+	cs := client.NewClientState()
+
+	// Add handler to MessageCreate event
 	// this gets called when a message is read by the bot
 	d.AddHandler(func(s *discordgo.Session, m *discordgo.MessageCreate) {
-		// Don't talk to yourself
 		if m.Author.ID == s.State.User.ID {
 			return
 		}
@@ -62,29 +64,19 @@ func (r *Router) Run(d *discordgo.Session) {
 			return
 		}
 
-		// Parse message
 		command := strings.ToLower(strings.TrimLeft(message, prefix))
-
 		//fmt.Printf("Received message {%s}\n", message)
-
-		// Split the command into 2 substrings
 		args := strings.SplitN(command, " ", 2)
 
-		// Find handler using router
 		handler, found := r.Route(args[0])
 		if !found {
 			s.ChannelMessageSend(m.ChannelID,
-				h.Italics("Ara Ara: Unknown command, use "+h.Code(prefix+"help")))
+				h.Italics("Ara Ara: Unknown command, see "+h.Code(prefix+"help")))
 			return
 		}
 
-		// Update the ClientState
-		cs.UpdateSession(s, m.Message)
-
-		// Call handler method
-		err := handler.Handle(cs)
-
-		// Got error from handler, throw it
+		cs.UpdateState(s, m.Message)
+		err := handler.MsgHandle(cs)
 		if err != nil {
 			fmt.Println(err.Error())
 			s.ChannelMessageSend(m.ChannelID,
@@ -93,12 +85,15 @@ func (r *Router) Run(d *discordgo.Session) {
 		}
 	})
 
+	/* Add more event handlers here if needed */
+
 	// Don't close the connection, wait for a kill signal
-	fmt.Println("μ's! Muuuusic, start!")
+	fmt.Println("μ's! Muuuuusic, start!")
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
-	<-sc
-
+	sig := <-sc
+	fmt.Println("\nReceived Signal: " + sig.String())
+	fmt.Println("Arigato, Minna-san! Sayonara!")
 	d.Close()
 }
 
@@ -112,48 +107,41 @@ func NewRouter() *Router {
 	return router
 }
 
+// init for discordgo things
 func init() {
-	// Get environment variable for discord token
-	t, err := os.LookupEnv("TOKEN")
-	if !err {
+	token, exists := os.LookupEnv("TOKEN")
+	if !exists {
 		log.Println("Please set env TOKEN=[AUTH_TOKEN]!")
 		os.Exit(1)
 	}
 
-	// Set the token
-	token = t
-}
-
-func main() {
-	// Open a websocket connection to Discord
-	dg, err := discordgo.New("Bot " + token)
+	var err error
+	dg, err = discordgo.New("Bot " + token)
 	if err != nil {
 		log.Println("Ara Ara:", err)
 	}
+
 	err = dg.Open()
 	if err != nil {
 		log.Printf("Ara Ara:", err)
 		os.Exit(1)
 	}
+}
 
-	// Generate command structs
-	help := handlers.NewHelp(prefix)
-	ping := handlers.NewPing()
-	washi := handlers.NewWashi()
-	junai := handlers.NewJunai()
-	stop := handlers.NewStop()
-	leave := handlers.NewLeave()
+// init was so good, I just had to make another one!
+func init() {
+	// Create router, register handlers
+	router = NewRouter()
+	router.AddHandler(handlers.NewPing())
+	router.AddHandler(handlers.NewWashi())
+	router.AddHandler(handlers.NewJunai())
+	router.AddHandler(handlers.NewStop())
+	router.AddHandler(handlers.NewLeave())
 
-	// Route messages based on their command
-	r := NewRouter()
-	r.AddHandler(help.Name, help)
-	r.AddHandler(ping.Name, ping)
-	r.AddHandler(washi.Name, washi)
-	r.AddHandler(junai.Name, junai)
-	r.AddHandler(stop.Name, stop)
-	r.AddHandler(leave.Name, leave)
+	// Add Help last to enter descriptions properly
+	router.AddHandler(handlers.NewHelp(prefix, &router.routes))
+}
 
-	// Add descriptions to help
-	help.AddDesc(&r.routes)
-	r.Run(dg)
+func main() {
+	router.Run(dg)
 }
