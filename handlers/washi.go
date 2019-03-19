@@ -5,15 +5,20 @@ import (
 	"github.com/VineBalloon/nozobot/sounds"
 )
 
-// Washi
+// TODO Washi
 // The command to play 'washi washi' sounds in voice chat
-// TODO also maybe post a pic as well
+// also maybe post a picture
 type Washi struct {
-	Name string
+	name        string
+	description string
+}
+
+func (w *Washi) Name() string {
+	return w.name
 }
 
 func (w *Washi) Desc() string {
-	return "Nozomi's washi washi will follow you into Voice as well!"
+	return w.description
 }
 
 func (w *Washi) Roles() []string {
@@ -24,12 +29,12 @@ func (w *Washi) Channels() []string {
 	return nil
 }
 
-// Handle
+// MsgHandle
 // Tries to join voice, fails if already joined or if user isn't in one.
 // TODO If no sound specified, plays a random sound from the washi sound collection.
 // Like Junai, you can stop the sound with the StopSig channel.
 // You probably won't though since most sounds are very short.
-func (w *Washi) Handle(cs *client.ClientState) error {
+func (w *Washi) MsgHandle(cs *client.ClientState) error {
 	s := cs.Session
 	m := cs.Message
 
@@ -44,7 +49,7 @@ func (w *Washi) Handle(cs *client.ClientState) error {
 	}
 
 	// Create a new sound collection with our sound map
-	sc, err := sounds.NewSoundCollection(w.Name, sm)
+	sc, err := sounds.NewSoundCollection(w.name, sm)
 	if err != nil {
 		return err
 	}
@@ -72,5 +77,6 @@ func (w *Washi) Handle(cs *client.ClientState) error {
 func NewWashi() *Washi {
 	return &Washi{
 		"Washi",
+		"Nozomi's washi washi will follow you into Voice as well!",
 	}
 }
