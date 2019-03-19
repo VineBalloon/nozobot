@@ -4,12 +4,19 @@ import (
 	"github.com/VineBalloon/nozobot/client"
 )
 
+// TODO Tarot
+// The command to generate random fortunes
 type Tarot struct {
-	Name string
+	name        string
+	description string
+}
+
+func (t *Tarot) Name() string {
+	return t.name
 }
 
 func (t *Tarot) Desc() string {
-	return "Nozomi decides your fate!"
+	return t.description
 }
 
 func (t *Tarot) Roles() []string {
@@ -20,7 +27,7 @@ func (t *Tarot) Channels() []string {
 	return nil
 }
 
-func (t *Tarot) Handle(cs *client.ClientState) error {
+func (t *Tarot) MsgHandle(cs *client.ClientState) error {
 	//s := cs.Session
 	//m := cs.Message
 
@@ -30,5 +37,6 @@ func (t *Tarot) Handle(cs *client.ClientState) error {
 func NewTarot() *Tarot {
 	return &Tarot{
 		"Tarot",
+		"Nozomi decides your fate!",
 	}
 }
