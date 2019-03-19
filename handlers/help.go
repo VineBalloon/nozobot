@@ -6,30 +6,35 @@ import (
 
 	"github.com/VineBalloon/nozobot/client"
 	"github.com/VineBalloon/nozobot/helpers"
-	//"github.com/bwmarrin/discordgo"
 )
 
 // Help
 // The command to generate help messages from other commands
 type Help struct {
-	Name         string
+	name         string
 	descriptions map[string]string
 	prefix       string
 }
 
-// AddDesc
-// Generates descriptions given the router's string->handler map.
-// This method is unique to the Help command
-func (h *Help) AddDesc(r *map[string]Handler) {
-	h.descriptions = make(map[string]string)
-	for cmd, handler := range *r {
-		h.descriptions[cmd] = handler.Desc()
-	}
+func (h *Help) Name() string {
+	return h.name
 }
 
-// Handle
+func (h *Help) Desc() string {
+	return "Nozomi helps you write out this command!"
+}
+
+func (h *Help) Roles() []string {
+	return nil
+}
+
+func (h *Help) Channels() []string {
+	return nil
+}
+
+// MsgHandle
 // Constructs the help message and cleanly formats it
-func (h *Help) Handle(cs *client.ClientState) error {
+func (h *Help) MsgHandle(cs *client.ClientState) error {
 	s := cs.Session
 	m := cs.Message
 
@@ -48,24 +53,18 @@ func (h *Help) Handle(cs *client.ClientState) error {
 	return nil
 }
 
-func (h *Help) Desc() string {
-	return "Nozomi helps you write out this command!"
-}
-
-func (h *Help) Roles() []string {
-	return nil
-}
-
-func (h *Help) Channels() []string {
-	return nil
-}
-
 // NewHelp
-// Constructs a new help struct. Requires the command prefix.
-func NewHelp(prefix string) *Help {
+// Constructs a new help struct.
+// Note: Requires the command prefix and router for dynamic help generation
+func NewHelp(prefix string, r *map[string]Handler) *Help {
+	// Register Descriptions from router
+	desc := make(map[string]string)
+	for cmd, handler := range *r {
+		desc[cmd] = handler.Desc()
+	}
 	return &Help{
 		"help",
-		nil,
+		desc,
 		prefix,
 	}
 }
