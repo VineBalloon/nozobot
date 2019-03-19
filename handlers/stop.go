@@ -1,15 +1,24 @@
 package handlers
 
-import "github.com/VineBalloon/nozobot/client"
+import (
+	"errors"
+
+	"github.com/VineBalloon/nozobot/client"
+)
 
 // Stop
 // The command to stop any audio streaming session gracefully
 type Stop struct {
-	Name string
+	name        string
+	description string
+}
+
+func (s *Stop) Name() string {
+	return s.name
 }
 
 func (s *Stop) Desc() string {
-	return "Stops all audio in a pinchi :sparkling_heart:"
+	return s.description
 }
 
 func (s *Stop) Roles() []string {
@@ -22,9 +31,14 @@ func (s *Stop) Channels() []string {
 
 // Handle
 // Tries to stop the current streaming session if there is one.
-func (s *Stop) Handle(cs *client.ClientState) error {
+func (s *Stop) MsgHandle(cs *client.ClientState) error {
 	ss := cs.Session
 	m := cs.Message
+
+	// Check for voice channel
+	if cs.Voice == nil {
+		return errors.New("stop: no voice room to stop")
+	}
 
 	// Stop the streaming session
 	err := cs.Voice.Stop()
@@ -44,5 +58,6 @@ func (s *Stop) Handle(cs *client.ClientState) error {
 func NewStop() *Stop {
 	return &Stop{
 		"Stop",
+		"Stops all audio in a pinchi :sparkling_heart:",
 	}
 }
