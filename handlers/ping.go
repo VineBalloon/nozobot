@@ -7,11 +7,16 @@ import (
 // Ping
 // The command to ping the user when they ask for it
 type Ping struct {
-	Name string
+	name        string
+	description string
+}
+
+func (p *Ping) Name() string {
+	return p.name
 }
 
 func (p *Ping) Desc() string {
-	return "Ping pong with Nozomi :ping_pong:"
+	return p.description
 }
 
 func (p *Ping) Roles() []string {
@@ -24,7 +29,7 @@ func (p *Ping) Channels() []string {
 
 // Handle
 // Responds with "Pong!" when user sends a ping command
-func (p *Ping) Handle(cs *client.ClientState) error {
+func (p *Ping) MsgHandle(cs *client.ClientState) error {
 	s := cs.Session
 	m := cs.Message
 
@@ -38,5 +43,6 @@ func (p *Ping) Handle(cs *client.ClientState) error {
 func NewPing() *Ping {
 	return &Ping{
 		"Ping",
+		"Ping pong with Nozomi :ping_pong:",
 	}
 }
