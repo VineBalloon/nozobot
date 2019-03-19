@@ -27,7 +27,7 @@ func (p *Ping) Channels() []string {
 	return nil
 }
 
-// Handle
+// MsgHandle
 // Responds with "Pong!" when user sends a ping command
 func (p *Ping) MsgHandle(cs *client.ClientState) error {
 	s := cs.Session
