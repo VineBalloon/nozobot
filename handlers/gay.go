@@ -1,13 +1,15 @@
 package handlers
 
 import (
-	"encoding/json"
+	//"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"strings"
 
 	"github.com/VineBalloon/nozobot/client"
+	"github.com/buger/jsonparser"
 )
 
 // Gay
@@ -42,27 +44,56 @@ func (g *Gay) MsgHandle(cs *client.ClientState) error {
 	if len(requests) == 0 {
 		return errors.New("argparse: not enough arguments")
 	}
+	fmt.Println(requests)
 
+	cl := &http.Client{}
 	for r := range requests {
-		request := requests[r]
+		request := strings.TrimRight(requests[r], " /") + ".json"
+		fmt.Println(request)
+
 		if !strings.HasPrefix(request, "https://www.reddit.com") {
 			return errors.New("gay: not a valid reddit url!")
 		}
-		strings.TrimRight(request, " /")
-		resp, err := http.Get(request + ".json")
+
+		//req, err := http.NewRequest("GET", "http://httpbin.org/user-agent", nil)
+		req, err := http.NewRequest("GET", request, nil)
 		if err != nil {
 			return err
 		}
-		// TODO
-		url := "Placeholder"
+
+		req.Header.Set("User-Agent", "Golang_Spider_Bot/3.0")
+
+		resp, err := cl.Do(req)
+		if err != nil {
+			return err
+		}
 		fmt.Println(resp)
 
-		var j interface{}
-		err = json.Unmarshal(resp, &j)
+		defer resp.Body.Close()
+
+		bytes, err := ioutil.ReadAll(resp.Body)
+		//var j []interface{}
+		//err = json.NewDecoder(resp.Body).Decode(&j)
 		if err != nil {
 			return err
 		}
-		fmt.Printf("%+v", j)
+		/*
+			url := "Placeholder"
+			out, err := json.MarshalIndent(j, "", "    ")
+			if err != nil {
+				return err
+			}
+		*/
+		// slice of map of string to map of string to slice of map of string to map of string to string
+		//data := j[0].(map[string]map[string][]map[string]map[string]string)
+		//jdata := j[0].(map[string]interface{}).(map[string]interface{})
+		//jurl := data["data"]["children"][0]["data"]["url"]
+		val, _, _, err := jsonparser.Get(bytes, "[0]", "data", "children", "[0]", "data", "url")
+		if err != nil {
+			return err
+		}
+		url := string(val)
+		fmt.Println(url)
 
 		_, err = s.ChannelMessageSend(m.ChannelID, url)
 		if err != nil {
