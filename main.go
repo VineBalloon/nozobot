@@ -111,7 +111,7 @@ func NewRouter() *Router {
 
 // init for discordgo things
 func init() {
-	token, exists := os.LookupEnv("TOKEN")
+	token, exists := os.LookupEnv("CARUDO")
 	if !exists {
 		log.Println("Please set env TOKEN=[AUTH_TOKEN]!")
 		os.Exit(1)
@@ -125,7 +125,7 @@ func init() {
 
 	err = dg.Open()
 	if err != nil {
-		log.Printf("Ara Ara:", err)
+		log.Printf("Ara Ara: ", err)
 		os.Exit(1)
 	}
 }
