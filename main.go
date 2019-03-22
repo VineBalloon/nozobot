@@ -113,8 +113,7 @@ func NewRouter() *Router {
 func init() {
 	token, exists := os.LookupEnv("CARUDO")
 	if !exists {
-		log.Println("Please set env TOKEN=[AUTH_TOKEN]!")
-		os.Exit(1)
+		log.Fatal("Missing Discord API Key: CARUDO")
 	}
 
 	var err error
