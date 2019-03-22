@@ -76,35 +76,53 @@ func (r *Router) Run(d *discordgo.Session) {
 		}
 
 		// Check roles
-		member, err := s.State.Member(message.GuildID, message.Author.ID)
+		var member *discordgo.Member
+		member, err := s.State.Member(m.GuildID, m.Author.ID)
 		if err != nil {
-			member, err := s.GuildMember(message.GuildID, message.Author.ID)
+			member, err = s.GuildMember(m.GuildID, m.Author.ID)
 			if err != nil {
-				return err
+				log.Println(err)
+				return
 			}
 		}
 
-		has := false
 		hroles := handler.Roles()
-		mroles := member.Roles
-		for hr := range hroles {
-			for mr := range mroles {
-				if hroles[hr] == mroles[mr] {
-					has = true
+		rolesrequired := []string{}
+		fmt.Println(hroles)
+		for r := range hroles {
+			role, err := s.State.Role(m.GuildID, hroles[r])
+			if err != nil {
+				log.Println(err)
+				return
+			}
+			rolesrequired[r] = role.Name
+		}
+		fmt.Println(rolesrequired)
+		if len(hroles) > 0 {
+			has := false
+			mroles := member.Roles
+			fmt.Println(mroles)
+			for rr := range rolesrequired {
+				for mr := range mroles {
+					if rolesrequired[rr] == mroles[mr] {
+						has = true
+					}
 				}
 			}
-		}
 
-		if !has {
-			msg := "Ara Ara: you need to be a " + hroles[0]
-			for hr := range hroles[1:] {
-				msg += " or a " + hroles[hr]
+			if !has {
+				out := "Ara Ara: you need to be a " + h.Code(hroles[0])
+				others := hroles[1:]
+				for hr := range others {
+					out += " or a " + h.Code(others[hr])
+				}
+				s.ChannelMessageSend(m.ChannelID, h.Italics(out))
+				return
 			}
-			log.Fatal(msg)
 		}
 
 		cs.UpdateState(s, m.Message)
-		err := handler.MsgHandle(cs)
+		err = handler.MsgHandle(cs)
 		if err != nil {
 			fmt.Println(err.Error())
 			var out strings.Builder

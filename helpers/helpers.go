@@ -23,6 +23,10 @@ func Code(s string) string {
 	return Surround(s, "`")
 }
 
+func Spoiler(s string) string {
+	return Surround(s, "||")
+}
+
 func Noembed(s string) string {
 	return "<" + s + ">"
 }

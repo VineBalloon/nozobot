@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"net/url"
+	//"net/url"
 	"os"
 	"regexp"
 	"strings"
@@ -35,7 +35,7 @@ func (g *Gay) Desc() string {
 }
 
 func (g *Gay) Roles() []string {
-	return []string{"gay"}
+	return []string{"gay", "boi"}
 }
 
 func (g *Gay) Channels() []string {
@@ -56,8 +56,14 @@ func (g *Gay) MsgHandle(cs *client.ClientState) error {
 	for r := range requests {
 		request := strings.TrimRight(requests[r], " /")
 		imgreg, err := regexp.Compile("(http(s?):)([/|.|\\w|\\s|-])*\\.(?:jpg|gif|png)")
+		if err != nil {
+			return err
+		}
 
-		var imgurl string
+		// TODO Remove
+		imgurl := ""
+		log.Println(imgurl)
+
 		switch {
 		case imgreg.MatchString(request):
 			imgurl = request
@@ -98,34 +104,37 @@ func (g *Gay) MsgHandle(cs *client.ClientState) error {
 			return errors.New("gay: not an image or reddit url")
 		}
 
-		log.Println("Requesting url: ", imgurl)
-		form := url.Values{}
-		form.Add("image", imgurl)
-		req, err := http.NewRequest("POST", WAIFU2X, strings.NewReader(form.Encode()))
-		if err != nil {
-			return err
-		}
+		/*
+			log.Println("Requesting url: ", imgurl)
+			form := url.Values{}
+			form.Add("image", imgurl)
+			req, err := http.NewRequest("POST", WAIFU2X, strings.NewReader(form.Encode()))
+			if err != nil {
+				return err
+			}
 
-		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-		req.Header.Set("api-key", KEY)
-		resp, err := cl.Do(req)
-		if err != nil {
-			return err
-		}
+			req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+			req.Header.Set("api-key", KEY)
+			resp, err := cl.Do(req)
+			if err != nil {
+				return err
+			}
 
-		defer resp.Body.Close()
-		b, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			return err
-		}
-		log.Println("Body was: ", string(b))
+			defer resp.Body.Close()
+			b, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				return err
+			}
+			log.Println("Body was: ", string(b))
 
-		val, _, _, err := jsonparser.Get(b, "output_url")
-		out := string(val)
-		_, err = s.ChannelMessageSend(m.ChannelID, out)
-		if err != nil {
-			return err
-		}
+			val, _, _, err := jsonparser.Get(b, "output_url")
+			out := string(val)
+			_, err = s.ChannelMessageSend(m.ChannelID, out)
+			if err != nil {
+				return err
+			}
+		*/
+		_, err = s.ChannelMessageSend(m.ChannelID, "hi")
 	}
 	return nil
 }
