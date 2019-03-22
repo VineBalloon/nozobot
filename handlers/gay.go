@@ -2,13 +2,21 @@ package handlers
 
 import (
 	"errors"
-	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
+	"net/url"
+	"os"
+	"regexp"
 	"strings"
 
 	"github.com/VineBalloon/nozobot/client"
 	"github.com/buger/jsonparser"
+)
+
+var (
+	WAIFU2X = "https://api.deepai.org/api/waifu2x"
+	KEY     string
 )
 
 // Gay
@@ -43,41 +51,78 @@ func (g *Gay) MsgHandle(cs *client.ClientState) error {
 	if len(requests) == 0 {
 		return errors.New("argparse: not enough arguments")
 	}
-	//fmt.Println(requests)
 
 	cl := &http.Client{}
 	for r := range requests {
-		request := strings.TrimRight(requests[r], " /") + ".json"
-		if !strings.HasPrefix(request, "https://www.reddit.com") {
-			return errors.New("gay: not a valid reddit url!")
+		request := strings.TrimRight(requests[r], " /")
+		imgreg, err := regexp.Compile("(http(s?):)([/|.|\\w|\\s|-])*\\.(?:jpg|gif|png)")
+
+		var imgurl string
+		switch {
+		case imgreg.MatchString(request):
+			imgurl = request
+
+		case strings.HasPrefix(request, "https://www.reddit.com"):
+			request += ".json"
+			//req, err := http.NewRequest("GET", "http://httpbin.org/user-agent", nil)
+			req, err := http.NewRequest("GET", request, nil)
+			if err != nil {
+				return err
+			}
+
+			req.Header.Set("User-Agent", "Golang_Spider_Bot/3.0")
+			resp, err := cl.Do(req)
+			if err != nil {
+				return err
+			}
+
+			defer resp.Body.Close()
+			b, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				return err
+			}
+
+			val, _, _, err := jsonparser.Get( // Magic
+				b,
+				"[0]", "data", "children",
+				"[0]", "data", "url",
+			)
+			if err != nil {
+				return err
+			}
+
+			imgurl = string(val)
+
+		// Add more cases here
+		default:
+			return errors.New("gay: not an image or reddit url")
 		}
 
-		//req, err := http.NewRequest("GET", "http://httpbin.org/user-agent", nil)
-		req, err := http.NewRequest("GET", request, nil)
+		log.Println("Requesting url: ", imgurl)
+		form := url.Values{}
+		form.Add("image", imgurl)
+		req, err := http.NewRequest("POST", WAIFU2X, strings.NewReader(form.Encode()))
 		if err != nil {
 			return err
 		}
 
-		req.Header.Set("User-Agent", "Golang_Spider_Bot/3.0")
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		req.Header.Set("api-key", KEY)
 		resp, err := cl.Do(req)
 		if err != nil {
 			return err
 		}
 
 		defer resp.Body.Close()
-		bytes, err := ioutil.ReadAll(resp.Body)
+		b, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
 			return err
 		}
+		log.Println("Body was: ", string(b))
 
-		val, _, _, err := jsonparser.Get(bytes, "[0]", "data", "children", "[0]", "data", "url")
-		if err != nil {
-			return err
-		}
-		url := string(val)
-		fmt.Println(url)
-
-		_, err = s.ChannelMessageSend(m.ChannelID, url)
+		val, _, _, err := jsonparser.Get(b, "output_url")
+		out := string(val)
+		_, err = s.ChannelMessageSend(m.ChannelID, out)
 		if err != nil {
 			return err
 		}
@@ -88,6 +133,14 @@ func (g *Gay) MsgHandle(cs *client.ClientState) error {
 func NewGay() *Gay {
 	return &Gay{
 		"Gay",
-		"Gets i.reddit image from reddit comments link",
+		"Upscales images, also works with Reddit comment links for i.reddit",
+	}
+}
+
+func init() {
+	var exists bool
+	KEY, exists = os.LookupEnv("WAIFU")
+	if !exists {
+		log.Fatal("Missing Waifu2x API Key: WAIFU")
 	}
 }
