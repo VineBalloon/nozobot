@@ -35,7 +35,7 @@ func (g *Gay) Desc() string {
 }
 
 func (g *Gay) Roles() []string {
-	return nil
+	return []string{"gay"}
 }
 
 func (g *Gay) Channels() []string {
