@@ -4,7 +4,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -65,7 +64,7 @@ func (r *Router) Run(d *discordgo.Session) {
 		}
 
 		command := strings.ToLower(strings.TrimLeft(message, prefix))
-		//fmt.Printf("Received message {%s}\n", message)
+		//log.Printf("Received message {%s}\n", message)
 		args := strings.SplitN(command, " ", 2)
 
 		handler, found := r.Route(args[0])
@@ -87,21 +86,22 @@ func (r *Router) Run(d *discordgo.Session) {
 		}
 
 		hroles := handler.Roles()
-		rolesrequired := []string{}
-		fmt.Println(hroles)
-		for r := range hroles {
-			role, err := s.State.Role(m.GuildID, hroles[r])
-			if err != nil {
-				log.Println(err)
-				return
-			}
-			rolesrequired[r] = role.Name
+		groles, err := s.GuildRoles(m.GuildID)
+		if err != nil {
+			log.Println(err)
+			return
 		}
-		fmt.Println(rolesrequired)
+		rolesrequired := []string{}
+		for hr := range hroles {
+			for gr := range groles {
+				if strings.ToLower(groles[gr].Name) == hroles[hr] {
+					rolesrequired = append(rolesrequired, groles[gr].ID)
+				}
+			}
+		}
 		if len(hroles) > 0 {
 			has := false
 			mroles := member.Roles
-			fmt.Println(mroles)
 			for rr := range rolesrequired {
 				for mr := range mroles {
 					if rolesrequired[rr] == mroles[mr] {
@@ -122,9 +122,10 @@ func (r *Router) Run(d *discordgo.Session) {
 		}
 
 		cs.UpdateState(s, m.Message)
+		s.ChannelTyping(m.ChannelID)
 		err = handler.MsgHandle(cs)
 		if err != nil {
-			fmt.Println(err.Error())
+			log.Println(err)
 			var out strings.Builder
 			out.WriteString("Ara Ara:")
 			out.WriteString(strings.Join(strings.Split(err.Error(), ":")[1:], ":"))
@@ -136,12 +137,12 @@ func (r *Router) Run(d *discordgo.Session) {
 	/* Add more event handlers here if needed */
 
 	// Don't close the connection, wait for a kill signal
-	fmt.Println("μ's! Muuuuusic, start!")
+	log.Println("μ's! Muuuuusic, start!")
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
 	sig := <-sc
-	fmt.Println("\nReceived Signal: " + sig.String())
-	fmt.Println("Arigato, Minna-san! Sayonara!")
+	log.Println("\nReceived Signal: " + sig.String())
+	log.Println("Arigato, Minna-san! Sayonara!")
 	d.Close()
 }
 
