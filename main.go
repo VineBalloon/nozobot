@@ -75,6 +75,34 @@ func (r *Router) Run(d *discordgo.Session) {
 			return
 		}
 
+		// Check roles
+		member, err := s.State.Member(message.GuildID, message.Author.ID)
+		if err != nil {
+			member, err := s.GuildMember(message.GuildID, message.Author.ID)
+			if err != nil {
+				return err
+			}
+		}
+
+		has := false
+		hroles := handler.Roles()
+		mroles := member.Roles
+		for hr := range hroles {
+			for mr := range mroles {
+				if hroles[hr] == mroles[mr] {
+					has = true
+				}
+			}
+		}
+
+		if !has {
+			msg := "Ara Ara: you need to be a " + hroles[0]
+			for hr := range hroles[1:] {
+				msg += " or a " + hroles[hr]
+			}
+			log.Fatal(msg)
+		}
+
 		cs.UpdateState(s, m.Message)
 		err := handler.MsgHandle(cs)
 		if err != nil {
@@ -134,11 +162,12 @@ func init() {
 	// Create router, register handlers
 	router = NewRouter()
 	router.AddHandler(handlers.NewPing())
-	router.AddHandler(handlers.NewWashi())
-	router.AddHandler(handlers.NewJunai())
-	router.AddHandler(handlers.NewStop())
-	router.AddHandler(handlers.NewLeave())
 	router.AddHandler(handlers.NewGay())
+	// TODO
+	//router.AddHandler(handlers.NewWashi())
+	//router.AddHandler(handlers.NewJunai())
+	//router.AddHandler(handlers.NewStop())
+	//router.AddHandler(handlers.NewLeave())
 
 	// Add Help last to enter descriptions properly
 	router.AddHandler(handlers.NewHelp(prefix, &router.routes))
