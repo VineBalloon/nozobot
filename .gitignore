@@ -5,8 +5,15 @@
 # Uningore all with extensions
 !*.*
 
+# Reignore swap files
+*.*~
+*.*.*~
+
 # Unignore dirs
 !*/
+
+# Unignore dockerfile
+!Dockerfile
 
 # Ignore audio dir
 audio/
