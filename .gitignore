@@ -18,3 +18,7 @@
 # Ignore audio dir
 audio/
 */audio/*
+
+# Ignore config files
+*.json
+*.yml
