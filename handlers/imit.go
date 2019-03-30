@@ -32,7 +32,7 @@ func (i *Imit) Channels() []string {
 }
 
 // MsgHandle
-func (g *Imit) MsgHandle(cs *client.ClientState) error {
+func (i *Imit) MsgHandle(cs *client.ClientState) error {
 	s := cs.Session
 	m := cs.Message
 	in := strings.Join(cs.Arguments, " ")
