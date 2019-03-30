@@ -182,6 +182,7 @@ func init() {
 	router = NewRouter()
 	router.AddHandler(handlers.NewPing())
 	router.AddHandler(handlers.NewGay())
+	router.AddHandler(handlers.NewImit())
 	// TODO
 	//router.AddHandler(handlers.NewWashi())
 	//router.AddHandler(handlers.NewJunai())
