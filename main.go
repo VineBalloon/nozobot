@@ -19,7 +19,7 @@ import (
 // Global vars
 var (
 	token  string
-	prefix = "!"
+	prefix = "><"
 	router *Router
 	dg     *discordgo.Session
 )
