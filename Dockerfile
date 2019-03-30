@@ -1,17 +1,19 @@
 FROM golang:1.12.1
 
-WORKDIR /go/src/nozobot
+# Don't go to go/src to enable go modules
+WORKDIR ~/nozobot
 COPY . .
 
 # Install dependencies
-RUN go get -d -v ./...
-RUN go install -v ./...
+RUN go get
+RUN go install
 
-# Get API keys
+# Make sure you pass in env vars when running
 ENV CARUDO=""
 ENV WAIFU=""
 
-# Expose websocket
+# Expose websocket port
 EXPOSE 443
 
+# Run nozobot
 CMD ["nozobot"]
