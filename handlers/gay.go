@@ -15,8 +15,8 @@ import (
 )
 
 var (
-	WAIFU2X = "https://api.deepai.org/api/waifu2x"
-	KEY     string
+	waifu = "https://api.deepai.org/api/waifu2x"
+	key   string
 )
 
 // Gay
@@ -104,13 +104,13 @@ func (g *Gay) MsgHandle(cs *client.ClientState) error {
 		log.Println("Requesting url: ", imgurl)
 		form := url.Values{}
 		form.Add("image", imgurl)
-		req, err := http.NewRequest("POST", WAIFU2X, strings.NewReader(form.Encode()))
+		req, err := http.NewRequest("POST", waifu, strings.NewReader(form.Encode()))
 		if err != nil {
 			return err
 		}
 
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-		req.Header.Set("api-key", KEY)
+		req.Header.Set("api-key", key)
 		resp, err := cl.Do(req)
 		if err != nil {
 			return err
@@ -141,7 +141,7 @@ func NewGay() *Gay {
 
 func init() {
 	var exists bool
-	KEY, exists = os.LookupEnv("WAIFU")
+	key, exists = os.LookupEnv("WAIFU")
 	if !exists {
 		log.Fatal("Missing Waifu2x API Key: WAIFU")
 	}
