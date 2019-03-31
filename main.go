@@ -11,6 +11,7 @@ import (
 	"syscall"
 
 	"github.com/VineBalloon/nozobot/client"
+	"github.com/VineBalloon/nozobot/detectors"
 	"github.com/VineBalloon/nozobot/handlers"
 	h "github.com/VineBalloon/nozobot/helpers"
 	"github.com/bwmarrin/discordgo"
@@ -21,23 +22,47 @@ var (
 	token  string
 	prefix = "><"
 	router *Router
+	detect *Detect
 	dg     *discordgo.Session
 )
 
-// Router
-// Struct to hold our string->router mappings
+// Detect Contains the detectors that will be notified on message
+type Detect struct {
+	detecting []detectors.Detector
+}
+
+// AddDetector Adds a detector to the detecting slice
+func (d *Detect) AddDetector(detector detectors.Detector) {
+	err := detector.Apiget()
+	if err != nil {
+		log.Fatal(err)
+	}
+	d.detecting = append(d.detecting, detector)
+}
+
+// Notify Notifies all detectors
+func (d *Detect) Notify(cs *client.ClientState) {
+	for _, det := range d.detecting {
+		det.MsgDetect(cs)
+	}
+}
+
+// NewDetect Constructor for Detect
+func NewDetect() *Detect {
+	return &Detect{[]detectors.Detector{}}
+}
+
+// Router Holds string->handler mappings
 type Router struct {
 	routes map[string]handlers.Handler
 }
 
-// AddHandler
-// Adds a string->handler mapping to the router
+// AddHandler Add a string->handler mapping to the router
 func (r *Router) AddHandler(handler handlers.Handler) {
 	r.routes[strings.ToLower(handler.Name())] = handler
 }
 
-// Route
-// Routes to handler from string
+// Route Routes to handler from string
 func (r *Router) Route(cmd string) (handlers.Handler, bool) {
 	routes := r.routes[cmd]
 	if routes == nil {
@@ -46,19 +71,23 @@ func (r *Router) Route(cmd string) (handlers.Handler, bool) {
 	return routes, true
 }
 
-// Run
-// Registers our event handler(s) to the discordgo session
+// Run Registers our event handler(s) to the discordgo session
 func (r *Router) Run(d *discordgo.Session) {
 	cs := client.NewClientState()
 
-	// Add handler to MessageCreate event
-	// this gets called when a message is read by the bot
+	// Handle MessageCreate event
 	d.AddHandler(func(s *discordgo.Session, m *discordgo.MessageCreate) {
 		if m.Author.ID == s.State.User.ID {
 			return
 		}
+		// Update client state
+		cs.UpdateState(s, m.Message)
 
 		message := strings.TrimSpace(m.Content)
+
+		// Send message to detectors
+		detect.Notify(cs)
+
 		if !strings.HasPrefix(message, prefix) {
 			return
 		}
@@ -75,7 +104,6 @@ func (r *Router) Run(d *discordgo.Session) {
 		}
 
 		// Check roles
-		var member *discordgo.Member
 		member, err := s.State.Member(m.GuildID, m.Author.ID)
 		if err != nil {
 			member, err = s.GuildMember(m.GuildID, m.Author.ID)
@@ -146,14 +174,9 @@ func (r *Router) Run(d *discordgo.Session) {
 	d.Close()
 }
 
-// NewRouter
-// Constructor for Router struct
+// NewRouter Constructor for Router struct
 func NewRouter() *Router {
-	r := make(map[string]handlers.Handler)
-	router := &Router{
-		routes: r,
-	}
-	return router
+	return &Router{make(map[string]handlers.Handler)}
 }
 
 // init for discordgo things
@@ -171,14 +194,14 @@ func init() {
 
 	err = dg.Open()
 	if err != nil {
-		log.Printf("Ara Ara: ", err)
+		log.Println("Ara Ara: ", err)
 		os.Exit(1)
 	}
 }
 
-// init was so good, I just had to make another one!
+// init for router and detector
 func init() {
-	// Create router, register handlers
+	// Create router, add handlers
 	router = NewRouter()
 	router.AddHandler(handlers.NewPing())
 	router.AddHandler(handlers.NewGay())
@@ -191,6 +214,10 @@ func init() {
 
 	// Add Help last to enter descriptions properly
 	router.AddHandler(handlers.NewHelp(prefix, &router.routes))
+
+	// Create detect, add detectors
+	detect = NewDetect()
+	detect.AddDetector(detectors.NewGay())
 }
 
 func main() {

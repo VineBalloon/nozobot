@@ -19,35 +19,37 @@ var (
 	key   string
 )
 
-// Gay
-// The command to get the image from a reddit link
+// Gay The command to get the image from a reddit link
 type Gay struct {
-	name        string
-	description string
+	name string
+	desc string
 }
 
+// Name Returns name of the command
 func (g *Gay) Name() string {
 	return g.name
 }
 
+// Desc Returns description of the command
 func (g *Gay) Desc() string {
-	return g.description
+	return g.desc
 }
 
+// Roles Returns roles required by the command
 func (g *Gay) Roles() []string {
 	return []string{"gay", "boi"}
 }
 
+// Channels Returns channels required by the command
 func (g *Gay) Channels() []string {
 	return nil
 }
 
-// MsgHandle
-// Gets i.reddit image from reddit comments link
+// MsgHandle Gets i.reddit image from reddit comments link
 func (g *Gay) MsgHandle(cs *client.ClientState) error {
 	s := cs.Session
 	m := cs.Message
-	requests := cs.Arguments
+	requests := cs.Args
 	if len(requests) == 0 {
 		return errors.New("argparse: not enough arguments")
 	}
@@ -132,6 +134,7 @@ func (g *Gay) MsgHandle(cs *client.ClientState) error {
 	return nil
 }
 
+// NewGay Constructor for Gay
 func NewGay() *Gay {
 	return &Gay{
 		"Gay",

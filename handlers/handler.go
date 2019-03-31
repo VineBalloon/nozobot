@@ -2,8 +2,7 @@ package handlers
 
 import "github.com/VineBalloon/nozobot/client"
 
-// Handler
-// The interface for all commands
+// Handler The interface for all prefixed commands
 type Handler interface {
 	Name() string       /* Name returns the name of the command */
 	Desc() string       /* Desc returns the description of the command */
@@ -15,6 +14,4 @@ type Handler interface {
 }
 
 // Initialise
-func init() {
-
-}
+func init() {}

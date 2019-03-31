@@ -10,32 +10,29 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-// ClientState
-// A wrapper around the discordgo session,
-// the VoiceRoom wrapper, and the last message received
+// ClientState A wrapper around the discordgo session, the VoiceRoom wrapper, and the last message received
 type ClientState struct {
-	Session   *discordgo.Session /* The current session */
-	Voice     *VoiceRoom         /* Voice wrapper */
-	Message   *discordgo.Message /* Last message received */
-	Arguments []string           /* Arguments from the message */
+	Session  *discordgo.Session /* The current session */
+	Voice    *VoiceRoom         /* Voice wrapper */
+	Message  *discordgo.Message /* Last message received */
+	Args     []string           /* Arguments sans first one */
+	Fullargs []string           /* Arguments inc. first one */
 }
 
-// UpdateState
-// Updates the current discord session and last message received.
+// UpdateState Updates the current discord session and last message received.
 func (c *ClientState) UpdateState(s *discordgo.Session, m *discordgo.Message) {
 	c.Session = s
 	c.Message = m
-	c.Arguments = strings.Split(m.Content, " ")[1:]
+	c.Fullargs = strings.Split(m.Content, " ")
+	c.Args = c.Fullargs[1:]
 }
 
-// AddVoice
-// Adds a VoiceRoom to ClientState
+// AddVoice Adds a VoiceRoom to ClientState
 func (c *ClientState) AddVoice(vr *VoiceRoom) {
 	c.Voice = vr
 }
 
-// Close
-// Closes all connections if there are any
+// Close Closes all connections if there are any
 func (c *ClientState) Close() error {
 	// Leave voice connection, ignore errors
 	if c.Voice == nil {
@@ -54,6 +51,7 @@ func (c *ClientState) Close() error {
 // NewClientState constructs a new ClientState
 func NewClientState() *ClientState {
 	return &ClientState{
+		nil,
 		nil,
 		nil,
 		nil,
