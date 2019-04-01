@@ -15,11 +15,18 @@ import (
 )
 
 var (
-	waifu = "https://api.deepai.org/api/waifu2x"
-	key   string
+	waifu     = "https://api.deepai.org/api/waifu2x"
+	key       string
+	whitelist = []string{
+		"/r/anime",
+		"/r/awwnime",
+		"/r/akkordian",
+		"/r/lovelive",
+		"/r/wholesomeyuri",
+	}
 )
 
-// Gay detector for image messages
+// Gay Detector for image messages
 type Gay struct {
 	name string
 	desc string
@@ -49,26 +56,35 @@ func (g *Gay) MsgDetect(cs *client.ClientState) error {
 		imgurl = request
 
 	case strings.HasPrefix(request, "https://www.reddit.com"):
+		// Reddit links are case insensitive
+		request = strings.ToLower(request)
+		in := false
+		for _, w := range whitelist {
+			if strings.Index(request, w) != -1 {
+				in = true
+			}
+		}
+		if !in {
+			return nil
+		}
+
 		request += ".json"
 		//req, err := http.NewRequest("GET", "http://httpbin.org/user-agent", nil)
 		req, err := http.NewRequest("GET", request, nil)
 		if err != nil {
-			log.Println(err)
-			return nil
+			return err
 		}
 
 		req.Header.Set("User-Agent", "Golang_Spider_Bot/3.0")
 		resp, err := cl.Do(req)
 		if err != nil {
-			log.Println(err)
-			return nil
+			return err
 		}
 
 		defer resp.Body.Close()
 		b, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			log.Println(err)
-			return nil
+			return err
 		}
 
 		val, _, _, err := jsonparser.Get( // Magic
@@ -77,53 +93,51 @@ func (g *Gay) MsgDetect(cs *client.ClientState) error {
 			"[0]", "data", "url",
 		)
 		if err != nil {
-			log.Println(err)
-			return nil
+			return err
 		}
 
 		imgurl = string(val)
-		if !imgregex.MatchString(imgurl) {
-			return nil
-		}
 
 	/* Add more cases here */
 	default:
 		return nil
 	}
 
+	// Just to be sure
+	if !imgregex.MatchString(imgurl) {
+		return nil
+	}
+
 	// Send typing, detect doesn't do this for us
 	s.ChannelTyping(m.ChannelID)
 
+	// Log so I can see how much of my API money we're using
 	log.Println("Requesting url: ", imgurl)
 	form := url.Values{}
 	form.Add("image", imgurl)
 	req, err := http.NewRequest("POST", waifu, strings.NewReader(form.Encode()))
 	if err != nil {
-		log.Println(err)
-		return nil
+		return err
 	}
 
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Set("api-key", key)
 	resp, err := cl.Do(req)
 	if err != nil {
-		log.Println(err)
-		return nil
+		return err
 	}
 
 	defer resp.Body.Close()
 	b, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Println(err)
-		return nil
+		return err
 	}
 
 	val, _, _, err := jsonparser.Get(b, "output_url")
 	out := string(val)
 	_, err = s.ChannelMessageSend(m.ChannelID, out)
 	if err != nil {
-		log.Println(err)
-		return nil
+		return err
 	}
 
 	return nil
