@@ -4,7 +4,9 @@ import "github.com/VineBalloon/nozobot/client"
 
 // Detector is the interface for message detectors.
 // Message detectors bypass the prefix requirement.
-// Note: Detectors should silently fail
+// Note: MsgDetect should expect bad input and error only on internal errors.
+// e.g. User sends an invalid format -> return nil.
+// Detector fails http request -> return err
 type Detector interface {
 	Name() string                        /* Returns name of detector */
 	Desc() string                        /* Returns name of detector */
