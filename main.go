@@ -43,7 +43,11 @@ func (d *Detect) AddDetector(detector detectors.Detector) {
 // Notify Notifies all detectors
 func (d *Detect) Notify(cs *client.ClientState) {
 	for _, det := range d.detecting {
-		det.MsgDetect(cs)
+		err := det.MsgDetect(cs)
+		// Silently fail, log the error
+		if err != nil {
+			log.Println(err)
+		}
 	}
 }
 
@@ -130,11 +134,9 @@ func (r *Router) Run(d *discordgo.Session) {
 		if len(hroles) > 0 {
 			has := false
 			mroles := member.Roles
-			for rr := range rolesrequired {
-				for mr := range mroles {
-					if rolesrequired[rr] == mroles[mr] {
-						has = true
-					}
+			for _, rr := range rolesrequired {
+				if h.Stringinslice(rr, mroles) {
+					has = true
 				}
 			}
 
@@ -204,7 +206,8 @@ func init() {
 	// Create router, add handlers
 	router = NewRouter()
 	router.AddHandler(handlers.NewPing())
-	router.AddHandler(handlers.NewGay())
+	// DEPRECATED: Using detector instead
+	//router.AddHandler(handlers.NewGay())
 	router.AddHandler(handlers.NewImit())
 	// TODO
 	//router.AddHandler(handlers.NewWashi())
