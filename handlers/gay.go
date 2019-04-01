@@ -20,6 +20,7 @@ var (
 )
 
 // Gay The command to get the image from a reddit link
+// DEPRECATED: Use the detector instead
 type Gay struct {
 	name string
 	desc string
