@@ -22,6 +22,7 @@ var (
 		"/r/awwnime",
 		"/r/akkordian",
 		"/r/lovelive",
+		"/r/washiwashi",
 		"/r/wholesomeyuri",
 	}
 )
@@ -58,15 +59,13 @@ func (g *Gay) MsgDetect(cs *client.ClientState) error {
 	case strings.HasPrefix(request, "https://www.reddit.com"):
 		// Reddit links are case insensitive
 		request = strings.ToLower(request)
-		in := false
 		for _, w := range whitelist {
 			if strings.Index(request, w) != -1 {
-				in = true
+				goto In
 			}
 		}
-		if !in {
-			return nil
-		}
+		return nil
+	In:
 
 		request += ".json"
 		//req, err := http.NewRequest("GET", "http://httpbin.org/user-agent", nil)
