@@ -84,7 +84,7 @@ func (r *Router) Run(d *discordgo.Session) {
 	d.UpdateListeningStatus("you 💜")
 
 	// Handle MessageCreate event
-	rmfunc := d.AddHandler(func(s *discordgo.Session, m *discordgo.MessageCreate) {
+	d.AddHandler(func(s *discordgo.Session, m *discordgo.MessageCreate) {
 		if m.Author.ID == s.State.User.ID {
 			return
 		}
@@ -167,9 +167,6 @@ func (r *Router) Run(d *discordgo.Session) {
 			return
 		}
 	})
-
-	// Call this to remove event handler
-	rmfunc()
 
 	/* Add more event handlers here if needed */
 
