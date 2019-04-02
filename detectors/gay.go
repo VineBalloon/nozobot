@@ -36,17 +36,17 @@ type Gay struct {
 	desc string
 }
 
-// Name returns name of detector
+// Name Returns name of detector
 func (g *Gay) Name() string {
 	return g.name
 }
 
-// Desc returns description of detector
+// Desc Returns description of detector
 func (g *Gay) Desc() string {
 	return g.desc
 }
 
-// MsgDetect detects messages to respond to
+// MsgDetect Detects messages to respond to
 func (g *Gay) MsgDetect(cs *client.ClientState) error {
 	s := cs.Session
 	m := cs.Message
