@@ -79,8 +79,12 @@ func (r *Router) Route(cmd string) (handlers.Handler, bool) {
 func (r *Router) Run(d *discordgo.Session) {
 	cs := client.NewClientState()
 
+	// Set listening
+	// TODO: UpdateStatusComplex
+	d.UpdateListeningStatus("to you 💜")
+
 	// Handle MessageCreate event
-	d.AddHandler(func(s *discordgo.Session, m *discordgo.MessageCreate) {
+	rmfunc := d.AddHandler(func(s *discordgo.Session, m *discordgo.MessageCreate) {
 		if m.Author.ID == s.State.User.ID {
 			return
 		}
@@ -163,6 +167,9 @@ func (r *Router) Run(d *discordgo.Session) {
 			return
 		}
 	})
+
+	// Call this to remove event handler
+	rmfunc()
 
 	/* Add more event handlers here if needed */
 
