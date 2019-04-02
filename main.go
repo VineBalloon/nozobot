@@ -81,7 +81,7 @@ func (r *Router) Run(d *discordgo.Session) {
 
 	// Set listening
 	// TODO: UpdateStatusComplex
-	d.UpdateListeningStatus("to you 💜")
+	d.UpdateListeningStatus("you 💜")
 
 	// Handle MessageCreate event
 	rmfunc := d.AddHandler(func(s *discordgo.Session, m *discordgo.MessageCreate) {
