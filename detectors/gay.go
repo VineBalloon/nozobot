@@ -15,16 +15,19 @@ import (
 )
 
 var (
-	waifu     = "https://api.deepai.org/api/waifu2x"
-	key       string
-	whitelist = []string{
-		"/r/anime",
-		"/r/awwnime",
-		"/r/akkordian",
-		"/r/lovelive",
-		"/r/washiwashi",
-		"/r/wholesomeyuri",
-	}
+	waifu = "https://api.deepai.org/api/waifu2x"
+	key   string
+	/*
+		whitelist = []string{
+			"/r/anime",
+			"/r/araragi",
+			"/r/awwnime",
+			"/r/akkordian",
+			"/r/lovelive",
+			"/r/washiwashi",
+			"/r/wholesomeyuri",
+		}
+	*/
 )
 
 // Gay Detector for image messages
@@ -58,14 +61,16 @@ func (g *Gay) MsgDetect(cs *client.ClientState) error {
 
 	case strings.HasPrefix(request, "https://www.reddit.com"):
 		// Reddit links are case insensitive
-		request = strings.ToLower(request)
-		for _, w := range whitelist {
-			if strings.Index(request, w) != -1 {
-				goto In
+		/* Don't use this yet
+			request = strings.ToLower(request)
+			for _, w := range whitelist {
+				if strings.Index(request, w) != -1 {
+					goto In
+				}
 			}
-		}
-		return nil
-	In:
+			return nil
+		In:
+		*/
 
 		request += ".json"
 		//req, err := http.NewRequest("GET", "http://httpbin.org/user-agent", nil)
