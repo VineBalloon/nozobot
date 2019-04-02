@@ -41,6 +41,7 @@ func (p *Stat) MsgHandle(cs *client.ClientState) error {
 		if err != nil {
 			return err
 		}
+		return nil
 	}
 
 	pre := strings.ToLower(args[0])
