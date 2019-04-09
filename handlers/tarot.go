@@ -1,6 +1,12 @@
 package handlers
 
 import (
+	"bufio"
+	"os"
+	"path/filepath"
+
+	"github.com/bwmarrin/discordgo"
+
 	"github.com/VineBalloon/nozobot/client"
 )
 
@@ -28,9 +34,32 @@ func (t *Tarot) Channels() []string {
 }
 
 func (t *Tarot) MsgHandle(cs *client.ClientState) error {
-	//s := cs.Session
-	//m := cs.Message
+	s := cs.Session
+	m := cs.Message
 
+	// TODO: Get random file from tarots
+	name := "tarots/example.png"
+	ext := filepath.Ext(name)[1:]
+	fd, err := os.Open(name)
+	if err != nil {
+		return err
+	}
+	img := &discordgo.File{
+		name,
+		"image/" + ext,
+		fd,
+	}
+	msg := "Nozomi Spiritual Power!"
+	out := &discordgo.MessageSend{
+		msg,
+		nil,
+		false,
+		[]*discordgo.File{img},
+	}
+	_, err = s.ChannelMessageSendComplex(m.ChannelID, out)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
