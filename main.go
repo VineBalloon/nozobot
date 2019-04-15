@@ -199,11 +199,12 @@ func init() {
 func init() {
 	// Create router, add handlers
 	router = NewRouter()
-	// DEPRECATED: Using detector instead
 	//router.AddHandler(handlers.NewGay())
+	// ^DEPRECATED: Using detector instead
 	router.AddHandler(handlers.NewImit())
 	router.AddHandler(handlers.NewStat())
 	router.AddHandler(handlers.NewPing())
+	router.AddHandler(handlers.NewTarot())
 	// TODO
 	//router.AddHandler(handlers.NewWashi())
 	//router.AddHandler(handlers.NewJunai())
