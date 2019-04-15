@@ -90,7 +90,6 @@ func (r *Router) Run(d *discordgo.Session) {
 		}
 		// Update client state
 		cs.UpdateState(s, m.Message)
-
 		message := strings.TrimSpace(m.Content)
 
 		// Send message to detectors
@@ -99,63 +98,54 @@ func (r *Router) Run(d *discordgo.Session) {
 		if !strings.HasPrefix(message, prefix) {
 			return
 		}
-
 		command := strings.ToLower(strings.TrimLeft(message, prefix))
-		//log.Printf("Received message {%s}\n", message)
 		args := strings.SplitN(command, " ", 2)
 
+		// Route to handler
 		handler, found := r.Route(args[0])
 		if !found {
 			s.ChannelMessageSend(m.ChannelID,
 				h.Italics("Ara Ara: Unknown command, see "+h.Code(prefix+"help")))
 			return
 		}
-
-		// Check roles
-		member, err := s.State.Member(m.GuildID, m.Author.ID)
-		if err != nil {
-			member, err = s.GuildMember(m.GuildID, m.Author.ID)
-			if err != nil {
-				log.Println(err)
-				return
-			}
-		}
-
-		hroles := handler.Roles()
-		groles, err := s.GuildRoles(m.GuildID)
+		// Check channels
+		hchannels := handler.Channels()
+		in, err := h.Inchannel(s, m.Message, hchannels)
 		if err != nil {
 			log.Println(err)
 			return
 		}
-		rolesrequired := []string{}
-		for hr := range hroles {
-			for gr := range groles {
-				if strings.ToLower(groles[gr].Name) == hroles[hr] {
-					rolesrequired = append(rolesrequired, groles[gr].ID)
+		if !in {
+			out := "Ara Ara: you need to be in " + h.Code(hchannels[0])
+			if len(hchannels) > 1 {
+				others := hchannels[1:]
+				for hr := range others {
+					out += " or " + h.Code(others[hr])
 				}
 			}
+			out += " to use this command!"
+			s.ChannelMessageSend(m.ChannelID, h.Italics(out))
+			return
 		}
-		if len(hroles) > 0 {
-			has := false
-			mroles := member.Roles
-			for _, rr := range rolesrequired {
-				if h.Stringinslice(rr, mroles) {
-					has = true
-				}
-			}
-
-			if !has {
-				out := "Ara Ara: you need to be a " + h.Code(hroles[0])
+		// Check roles
+		hroles := handler.Roles()
+		has, err := h.Hasroles(s, m.Message, hroles)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		if !has {
+			out := "Ara Ara: you need to be a " + h.Code(hroles[0])
+			if len(hroles) > 1 {
 				others := hroles[1:]
 				for hr := range others {
 					out += " or a " + h.Code(others[hr])
 				}
-				s.ChannelMessageSend(m.ChannelID, h.Italics(out))
-				return
 			}
+			out += " to use this command!"
+			s.ChannelMessageSend(m.ChannelID, h.Italics(out))
+			return
 		}
-
-		cs.UpdateState(s, m.Message)
 		s.ChannelTyping(m.ChannelID)
 		err = handler.MsgHandle(cs)
 		if err != nil {
