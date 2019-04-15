@@ -1,13 +1,19 @@
 package handlers
 
 import (
-	"bufio"
+	"io/ioutil"
+	"math/rand"
 	"os"
 	"path/filepath"
 
 	"github.com/bwmarrin/discordgo"
 
 	"github.com/VineBalloon/nozobot/client"
+)
+
+var (
+	MAJOR_DIR string = "./tarots/major-arcana/"
+	MINOR_DIR string = "./tarots/minor-arcana/"
 )
 
 // TODO Tarot
@@ -37,15 +43,20 @@ func (t *Tarot) MsgHandle(cs *client.ClientState) error {
 	s := cs.Session
 	m := cs.Message
 
-	// TODO: Get random file from tarots
-	name := "tarots/example.png"
-	ext := filepath.Ext(name)[1:]
-	fd, err := os.Open(name)
+	// Read from major arcana, cwd is nozobot's root
+	majors, err := ioutil.ReadDir(MAJOR_DIR)
+	if err != nil {
+		return err
+	}
+	major := majors[rand.Int()%len(majors)]
+	path := MAJOR_DIR + major.Name()
+	ext := filepath.Ext(path)[1:]
+	fd, err := os.Open(path)
 	if err != nil {
 		return err
 	}
 	img := &discordgo.File{
-		name,
+		major.Name(),
 		"image/" + ext,
 		fd,
 	}
@@ -55,6 +66,7 @@ func (t *Tarot) MsgHandle(cs *client.ClientState) error {
 		nil,
 		false,
 		[]*discordgo.File{img},
+		nil,
 	}
 	_, err = s.ChannelMessageSendComplex(m.ChannelID, out)
 	if err != nil {
