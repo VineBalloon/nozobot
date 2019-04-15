@@ -8,6 +8,22 @@ import (
 	h "github.com/VineBalloon/nozobot/helpers"
 )
 
+var (
+	chotto = []string{
+		"Wait, ",
+		"Dame dame, ",
+		"Chotto, ",
+		"Chotto matte kudosai, ",
+		h.Italics("taps shoulder") + " nee nee~, ",
+	}
+	illegal = []string{
+		"loli",
+		"drug",
+		"hentai",
+		"rule 34",
+	}
+)
+
 // Illegal Detector for illegal messages
 type Illegal struct {
 	name string
@@ -29,14 +45,7 @@ func (i *Illegal) MsgDetect(cs *client.ClientState) error {
 	s := cs.Session
 	m := cs.Message
 	lowered := strings.ToLower(cs.Message.Content)
-	chotto := []string{
-		"Wait, ",
-		"Dame dame, ",
-		"Chotto, ",
-		"Chotto matte kudosai, ",
-		h.Italics("taps shoulder") + " nee nee~, ",
-	}
-	if h.Slicehassubstring(lowered, chotto) {
+	if h.Slicehassubstring(lowered, illegal) {
 		out := chotto[rand.Int()%len(chotto)] + "that's illegal!"
 		s.ChannelMessageSend(m.ChannelID, out)
 		return nil
