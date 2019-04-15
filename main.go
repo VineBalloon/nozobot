@@ -217,6 +217,7 @@ func init() {
 	// Create detect, add detectors
 	detect = NewDetect()
 	detect.AddDetector(detectors.NewGay())
+	detect.AddDetector(detectors.NewIllegal())
 }
 
 func main() {
