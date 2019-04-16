@@ -24,20 +24,26 @@ func (p *Stat) Desc() string {
 
 // Roles Returns roles required by the command
 func (p *Stat) Roles() []string {
-	return nil
+	return []string{"mod"}
 }
 
 // Channels Returns channels required by the command
 func (p *Stat) Channels() []string {
-	return nil
+	return []string{"bot"}
 }
 
-// MsgHandle Changes Nozomi's status
+// MsgHandle Handles MessageCreate event
 func (p *Stat) MsgHandle(cs *client.ClientState) error {
+	// TODO: Send a message in response
 	s := cs.Session
+	m := cs.Message
 	args := cs.Args
 	if len(args) == 0 {
 		err := s.UpdateStatus(0, "")
+		if err != nil {
+			return err
+		}
+		_, err = s.ChannelMessageSend(m.ChannelID, "Reset Status")
 		if err != nil {
 			return err
 		}
@@ -51,6 +57,10 @@ func (p *Stat) MsgHandle(cs *client.ClientState) error {
 			stat = strings.Join(args[1:], " ")
 		}
 		err := s.UpdateListeningStatus(stat)
+		if err != nil {
+			return err
+		}
+		_, err = s.ChannelMessageSend(m.ChannelID, "Status: Listening to "+stat)
 		if err != nil {
 			return err
 		}
@@ -70,6 +80,10 @@ func (p *Stat) MsgHandle(cs *client.ClientState) error {
 	if err != nil {
 		return err
 	}
+	_, err = s.ChannelMessageSend(m.ChannelID, "Status: Playing "+stat)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -77,6 +91,6 @@ func (p *Stat) MsgHandle(cs *client.ClientState) error {
 func NewStat() *Stat {
 	return &Stat{
 		"Stat",
-		"Changes Nozomi's Presence",
+		"Changes Nozomi's Status",
 	}
 }

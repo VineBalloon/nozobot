@@ -90,73 +90,63 @@ func (r *Router) Run(d *discordgo.Session) {
 		}
 		// Update client state
 		cs.UpdateState(s, m.Message)
-
 		message := strings.TrimSpace(m.Content)
 
-		// Send message to detectors
+		// Notify detectors
 		detect.Notify(cs)
 
 		if !strings.HasPrefix(message, prefix) {
 			return
 		}
-
+		// Route to message handler
+		s.ChannelTyping(m.ChannelID)
 		command := strings.ToLower(strings.TrimLeft(message, prefix))
-		//log.Printf("Received message {%s}\n", message)
 		args := strings.SplitN(command, " ", 2)
-
 		handler, found := r.Route(args[0])
 		if !found {
 			s.ChannelMessageSend(m.ChannelID,
 				utils.Italics("Ara Ara: Unknown command, see "+utils.Code(prefix+"help")))
 			return
 		}
-
-		// Check roles
-		member, err := s.State.Member(m.GuildID, m.Author.ID)
-		if err != nil {
-			member, err = s.GuildMember(m.GuildID, m.Author.ID)
-			if err != nil {
-				log.Println(err)
-				return
-			}
-		}
-
-		hroles := handler.Roles()
-		groles, err := s.GuildRoles(m.GuildID)
+		// Check channels
+		hchannels := handler.Channels()
+		in, err := utils.Inchannel(s, m.Message, hchannels)
 		if err != nil {
 			log.Println(err)
 			return
 		}
-		rolesrequired := []string{}
-		for hr := range hroles {
-			for gr := range groles {
-				if strings.ToLower(groles[gr].Name) == hroles[hr] {
-					rolesrequired = append(rolesrequired, groles[gr].ID)
+		if !in {
+			out := "Ara Ara: you need to be in " + utils.Code(hchannels[0])
+			if len(hchannels) > 1 {
+				others := hchannels[1:]
+				for hr := range others {
+					out += " or " + utils.Code(others[hr])
 				}
 			}
+			out += " to use this command!"
+			s.ChannelMessageSend(m.ChannelID, utils.Italics(out))
+			return
 		}
-		if len(hroles) > 0 {
-			has := false
-			mroles := member.Roles
-			for _, rr := range rolesrequired {
-				if utils.Stringinslice(rr, mroles) {
-					has = true
-				}
-			}
-
-			if !has {
-				out := "Ara Ara: you need to be a " + utils.Code(hroles[0])
+		// Check roles
+		hroles := handler.Roles()
+		has, err := utils.Hasroles(s, m.Message, hroles)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		if !has {
+			out := "Ara Ara: you need to be a " + utils.Code(hroles[0])
+			if len(hroles) > 1 {
 				others := hroles[1:]
 				for hr := range others {
 					out += " or a " + utils.Code(others[hr])
 				}
-				s.ChannelMessageSend(m.ChannelID, utils.Italics(out))
-				return
 			}
+			out += " to use this command!"
+			s.ChannelMessageSend(m.ChannelID, utils.Italics(out))
+			return
 		}
-
-		cs.UpdateState(s, m.Message)
-		s.ChannelTyping(m.ChannelID)
+		// Call message handler
 		err = handler.MsgHandle(cs)
 		if err != nil {
 			log.Println(err)
@@ -169,15 +159,6 @@ func (r *Router) Run(d *discordgo.Session) {
 	})
 
 	/* Add more event handlers here if needed */
-
-	// Don't close the connection, wait for a kill signal
-	log.Println("μ's! Muuuuusic, start!")
-	sc := make(chan os.Signal, 1)
-	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
-	sig := <-sc
-	log.Println("\nReceived Signal: " + sig.String())
-	log.Println("Arigato, Minna-san! Sayonara!")
-	d.Close()
 }
 
 // NewRouter Constructor for Router struct
@@ -210,7 +191,7 @@ func init() {
 	// Create router, add handlers
 	router = NewRouter()
 	//router.AddHandler(handlers.NewGay())
-	// ^DEPRECATED: Using detector instead
+	// ^^^DEPRECATED: Moved to detector
 	router.AddHandler(handlers.NewImit())
 	router.AddHandler(handlers.NewStat())
 	router.AddHandler(handlers.NewPing())
@@ -227,8 +208,19 @@ func init() {
 	// Create detect, add detectors
 	detect = NewDetect()
 	detect.AddDetector(detectors.NewGay())
+	detect.AddDetector(detectors.NewIllegal())
 }
 
 func main() {
 	router.Run(dg)
+
+	// Don't close the connection, wait for a kill signal
+	log.Println("μ's! Muuuuusic, start!")
+	sc := make(chan os.Signal, 1)
+	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
+	sig := <-sc
+	log.Println("")
+	log.Println("Received Signal: " + sig.String())
+	log.Println("Arigato, Minna-san! Sayonara!")
+	dg.Close()
 }
