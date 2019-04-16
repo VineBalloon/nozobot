@@ -4,7 +4,7 @@ import (
 	"errors"
 
 	"github.com/VineBalloon/nozobot/client"
-	"github.com/VineBalloon/nozobot/helpers"
+	"github.com/VineBalloon/nozobot/utils"
 )
 
 // Leave
@@ -56,7 +56,7 @@ func (p *Leave) MsgHandle(cs *client.ClientState) error {
 	}
 
 	// Signal that we've left
-	_, err = s.ChannelMessageSend(m.ChannelID, "Left "+helpers.Code(channel.Name))
+	_, err = s.ChannelMessageSend(m.ChannelID, "Left "+utils.Code(channel.Name))
 	if err != nil {
 		return err
 	}
