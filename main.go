@@ -9,6 +9,7 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/VineBalloon/nozobot/client"
 	"github.com/VineBalloon/nozobot/detectors"
@@ -19,6 +20,7 @@ import (
 
 // Global vars
 var (
+	appid  = ""
 	token  string
 	prefix = "><"
 	router *Router
@@ -79,9 +81,35 @@ func (r *Router) Route(cmd string) (handlers.Handler, bool) {
 func (r *Router) Run(d *discordgo.Session) {
 	cs := client.NewClientState()
 
-	// Set listening
-	// TODO: UpdateStatusComplex
-	d.UpdateListeningStatus("you 💜")
+	// Set status
+	tsp := discordgo.TimeStamps{
+		StartTimestamp: time.Now().Unix(),
+	}
+	ass := discordgo.Assets{
+		"Nozobot",
+		"Nozobot",
+		"A cute chatbot",
+		"A cute chatbot",
+	}
+	game := &discordgo.Game{
+		Name:          "you 💜",
+		Type:          discordgo.GameTypeGame,
+		URL:           "https://github.com/VineBalloon/nozobot",
+		Details:       "Nozobot is a chatbot made by VineBalloon",
+		State:         "Happy to see you 💜",
+		TimeStamps:    tsp,
+		Assets:        ass,
+		ApplicationID: appid,
+		Instance:      1,
+	}
+	cstat := discordgo.UpdateStatusData{
+		IdleSince: nil, // time.Now().Unix(),
+		Game:      game,
+		AFK:       false,
+		Status:    "Call & Respond",
+	}
+	d.UpdateStatusComplex(cstat)
+	//d.UpdateListeningStatus("you 💜")
 
 	// Handle MessageCreate event
 	d.AddHandler(func(s *discordgo.Session, m *discordgo.MessageCreate) {
