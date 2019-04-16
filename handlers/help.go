@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/VineBalloon/nozobot/client"
-	"github.com/VineBalloon/nozobot/helpers"
+	"github.com/VineBalloon/nozobot/utils"
 )
 
 // Help
@@ -38,10 +38,10 @@ func (h *Help) MsgHandle(cs *client.ClientState) error {
 	s := cs.Session
 	m := cs.Message
 
-	out := helpers.Bold("Commands:\n")
+	out := utils.Bold("Commands:\n")
 	sorted := []string{}
 	for name, desc := range h.descriptions {
-		sorted = append(sorted, helpers.Code(h.prefix+name)+": "+desc)
+		sorted = append(sorted, utils.Code(h.prefix+name)+": "+desc)
 	}
 	sort.Strings(sorted)
 	out += strings.Join(sorted, "\n")
