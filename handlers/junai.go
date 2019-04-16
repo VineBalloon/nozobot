@@ -2,8 +2,8 @@ package handlers
 
 import (
 	"github.com/VineBalloon/nozobot/client"
-	"github.com/VineBalloon/nozobot/helpers"
 	"github.com/VineBalloon/nozobot/sounds"
+	"github.com/VineBalloon/nozobot/utils"
 )
 
 // Junai
@@ -62,7 +62,7 @@ func (j *Junai) MsgHandle(cs *client.ClientState) error {
 	}
 
 	// Signal to the people that we are about to get rowdy
-	_, err = s.ChannelMessageSend(m.ChannelID, helpers.Bold("Ikuyoooo!"))
+	_, err = s.ChannelMessageSend(m.ChannelID, utils.Bold("Ikuyoooo!"))
 	if err != nil {
 		return err
 	}
