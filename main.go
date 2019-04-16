@@ -13,7 +13,7 @@ import (
 	"github.com/VineBalloon/nozobot/client"
 	"github.com/VineBalloon/nozobot/detectors"
 	"github.com/VineBalloon/nozobot/handlers"
-	h "github.com/VineBalloon/nozobot/helpers"
+	"github.com/VineBalloon/nozobot/utils"
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -107,7 +107,7 @@ func (r *Router) Run(d *discordgo.Session) {
 		handler, found := r.Route(args[0])
 		if !found {
 			s.ChannelMessageSend(m.ChannelID,
-				h.Italics("Ara Ara: Unknown command, see "+h.Code(prefix+"help")))
+				utils.Italics("Ara Ara: Unknown command, see "+utils.Code(prefix+"help")))
 			return
 		}
 
@@ -139,18 +139,18 @@ func (r *Router) Run(d *discordgo.Session) {
 			has := false
 			mroles := member.Roles
 			for _, rr := range rolesrequired {
-				if h.Stringinslice(rr, mroles) {
+				if utils.Stringinslice(rr, mroles) {
 					has = true
 				}
 			}
 
 			if !has {
-				out := "Ara Ara: you need to be a " + h.Code(hroles[0])
+				out := "Ara Ara: you need to be a " + utils.Code(hroles[0])
 				others := hroles[1:]
 				for hr := range others {
-					out += " or a " + h.Code(others[hr])
+					out += " or a " + utils.Code(others[hr])
 				}
-				s.ChannelMessageSend(m.ChannelID, h.Italics(out))
+				s.ChannelMessageSend(m.ChannelID, utils.Italics(out))
 				return
 			}
 		}
@@ -163,7 +163,7 @@ func (r *Router) Run(d *discordgo.Session) {
 			var out strings.Builder
 			out.WriteString("Ara Ara:")
 			out.WriteString(strings.Join(strings.Split(err.Error(), ":")[1:], ":"))
-			s.ChannelMessageSend(m.ChannelID, h.Italics(out.String()))
+			s.ChannelMessageSend(m.ChannelID, utils.Italics(out.String()))
 			return
 		}
 	})
