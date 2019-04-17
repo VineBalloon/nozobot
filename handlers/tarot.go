@@ -16,7 +16,7 @@ var (
 	MINOR_DIR string = "./tarots/minor-arcana/"
 )
 
-// TODO Tarot
+// Tarot
 // The command to generate random fortunes
 type Tarot struct {
 	name        string
