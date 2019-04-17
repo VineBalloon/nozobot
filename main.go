@@ -20,7 +20,6 @@ import (
 
 // Global vars
 var (
-	appid  = ""
 	token  string
 	prefix = "><"
 	router *Router
@@ -80,36 +79,7 @@ func (r *Router) Route(cmd string) (handlers.Handler, bool) {
 // Run Registers our event handler(s) to the discordgo session
 func (r *Router) Run(d *discordgo.Session) {
 	cs := client.NewClientState()
-
-	// Set status
-	tsp := discordgo.TimeStamps{
-		StartTimestamp: time.Now().Unix(),
-	}
-	ass := discordgo.Assets{
-		"Nozobot",
-		"Nozobot",
-		"A cute chatbot",
-		"A cute chatbot",
-	}
-	game := &discordgo.Game{
-		Name:          "you 💜",
-		Type:          discordgo.GameTypeGame,
-		URL:           "https://github.com/VineBalloon/nozobot",
-		Details:       "Nozobot is a chatbot made by VineBalloon",
-		State:         "Happy to see you 💜",
-		TimeStamps:    tsp,
-		Assets:        ass,
-		ApplicationID: appid,
-		Instance:      1,
-	}
-	cstat := discordgo.UpdateStatusData{
-		IdleSince: nil, // time.Now().Unix(),
-		Game:      game,
-		AFK:       false,
-		Status:    "Call & Respond",
-	}
-	d.UpdateStatusComplex(cstat)
-	//d.UpdateListeningStatus("you 💜")
+	d.UpdateListeningStatus("you 💜")
 
 	// Handle MessageCreate event
 	d.AddHandler(func(s *discordgo.Session, m *discordgo.MessageCreate) {
